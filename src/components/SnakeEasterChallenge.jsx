@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 const GRID_SIZE = 20
 const WIN_SCORE = 100
 const MIN_SWIPE_DISTANCE = 24
+const SPECIAL_EGG_NUMBER = 34
 
 const pastelColors = ['bg-pink-200', 'bg-purple-200', 'bg-yellow-200', 'bg-cyan-200', 'bg-emerald-200']
 const accentColors = ['bg-pink-500', 'bg-purple-500', 'bg-yellow-500', 'bg-cyan-500', 'bg-emerald-500']
@@ -43,14 +44,33 @@ const snakeColorForEggCount = (eggCount) => {
   return 'bg-lime-300'
 }
 
-const getRandomFood = (snake) => {
+const getEggCells = (food) => {
+  const size = food.size ?? 1
+  const cells = []
+
+  for (let offsetY = 0; offsetY < size; offsetY += 1) {
+    for (let offsetX = 0; offsetX < size; offsetX += 1) {
+      cells.push({ x: food.x + offsetX, y: food.y + offsetY })
+    }
+  }
+
+  return cells
+}
+
+const getRandomFood = (snake, eggNumber) => {
+  const isSpecialEgg = eggNumber === SPECIAL_EGG_NUMBER
+  const eggSize = isSpecialEgg ? 2 : 1
+
   while (true) {
     const candidate = {
-      x: Math.floor(Math.random() * GRID_SIZE),
-      y: Math.floor(Math.random() * GRID_SIZE)
+      x: Math.floor(Math.random() * (GRID_SIZE - eggSize + 1)),
+      y: Math.floor(Math.random() * (GRID_SIZE - eggSize + 1)),
+      size: eggSize,
+      isSpecial: isSpecialEgg
     }
 
-    const isOnSnake = snake.some((segment) => segment.x === candidate.x && segment.y === candidate.y)
+    const candidateCells = getEggCells(candidate)
+    const isOnSnake = candidateCells.some((cell) => snake.some((segment) => segment.x === cell.x && segment.y === cell.y))
     if (!isOnSnake) {
       return candidate
     }
@@ -63,7 +83,7 @@ const createInitialGameState = () => {
     snake: initialSnake,
     direction: { x: 1, y: 0 },
     pendingDirection: { x: 1, y: 0 },
-    food: getRandomFood(initialSnake),
+    food: getRandomFood(initialSnake, 1),
     eggStyle: randomEggStyle(),
     score: 0,
     eggsEaten: 0,
@@ -72,7 +92,17 @@ const createInitialGameState = () => {
   }
 }
 
-function EggSprite({ style }) {
+function EggSprite({ style, isSpecial }) {
+  if (isSpecial) {
+    return (
+      <div className="relative z-10 -translate-x-1/4 -translate-y-1/4 h-8 w-6 animate-pulse rounded-[999px] border border-yellow-200 bg-yellow-400 shadow-[0_0_18px_4px_rgba(250,204,21,0.8)]">
+        <span className="absolute left-1 top-1 h-1.5 w-1.5 rounded-full bg-yellow-100" />
+        <span className="absolute right-1 top-2 h-1.5 w-1.5 rounded-full bg-amber-200" />
+        <span className="absolute left-2 top-4 h-0.5 w-2 rounded-full bg-yellow-100" />
+      </div>
+    )
+  }
+
   return (
     <div className={`relative h-4 w-3 rounded-[999px] ${style.shell}`}>
       {style.pattern === 'dots' && (
@@ -100,6 +130,7 @@ export default function SnakeEasterChallenge({ onWin }) {
 
   const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
   const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten), [eggsEaten])
+  const foodCells = useMemo(() => getEggCells(food), [food])
 
   const resetGame = useCallback(() => {
     setGameState(createInitialGameState())
@@ -131,7 +162,8 @@ export default function SnakeEasterChallenge({ onWin }) {
           return createInitialGameState()
         }
 
-        const ateEgg = nextHead.x === prev.food.x && nextHead.y === prev.food.y
+        const foodCells = getEggCells(prev.food)
+        const ateEgg = foodCells.some((cell) => nextHead.x === cell.x && nextHead.y === cell.y)
         const nextSnake = [nextHead, ...prev.snake]
 
         if (!ateEgg) {
@@ -147,7 +179,7 @@ export default function SnakeEasterChallenge({ onWin }) {
           ...prev,
           snake: nextSnake,
           direction: prev.pendingDirection,
-          food: getRandomFood(nextSnake),
+          food: getRandomFood(nextSnake, newEggCount + 1),
           eggStyle: randomEggStyle(),
           score: newScore,
           eggsEaten: newEggCount,
@@ -226,12 +258,18 @@ export default function SnakeEasterChallenge({ onWin }) {
             const x = index % GRID_SIZE
             const y = Math.floor(index / GRID_SIZE)
             const isSnake = snake.some((segment) => segment.x === x && segment.y === y)
-            const isFood = food.x === x && food.y === y
+            const isFood = foodCells.some((cell) => cell.x === x && cell.y === y)
+            const isFoodOrigin = food.x === x && food.y === y
 
             return (
               <div key={`${x}-${y}`} className="flex aspect-square items-center justify-center border border-lime-950/20">
                 {isSnake && <div className={`h-[70%] w-[70%] rounded-sm ${snakeColorClass}`} />}
-                {isFood && <EggSprite style={eggStyle} />}
+                {isFood && !food.isSpecial && <EggSprite style={eggStyle} />}
+                {isFood && food.isSpecial && (
+                  isFoodOrigin
+                    ? <EggSprite style={eggStyle} isSpecial />
+                    : <div className="h-3 w-3 animate-pulse rounded-full bg-yellow-300/80 shadow-[0_0_10px_2px_rgba(250,204,21,0.7)]" />
+                )}
               </div>
             )
           })}
