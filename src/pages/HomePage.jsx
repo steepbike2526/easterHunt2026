@@ -27,14 +27,14 @@ export default function HomePage() {
     <TerminalWindow>
       <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-4">
         <label htmlFor="clue-code" className="block text-lg text-lime-200">
-          Enter clue code
+          Clue Code:
         </label>
         <input
           id="clue-code"
           value={clueCode}
           onChange={(event) => setClueCode(event.target.value)}
           className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 uppercase outline-none focus:border-lime-300"
-          placeholder="e.g. CLU1"
+          placeholder="ENTER CLUE CODE..."
           maxLength={4}
         />
         <RetroButton type="submit" className="w-full">
