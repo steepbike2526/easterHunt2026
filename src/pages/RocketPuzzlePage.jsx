@@ -33,7 +33,7 @@ export default function RocketPuzzlePage() {
 
     const hideTimer = setTimeout(() => {
       setShowRocketAnimation(false)
-    }, 1400)
+    }, 4200)
 
     return () => {
       clearTimeout(launchTimer)
@@ -46,53 +46,57 @@ export default function RocketPuzzlePage() {
   }
 
   return (
-    <TerminalWindow>
-      <div className="space-y-4 text-lime-300">
-        {showRocketAnimation && (
-          <div className="h-12 overflow-hidden">
-            <span
-              aria-hidden="true"
-              className={`block text-3xl transition-all duration-1000 ease-out ${
-                isRocketInFlight ? 'translate-x-[110%] -translate-y-6 opacity-0' : 'translate-x-0 translate-y-2 opacity-100'
-              }`}
-            >
-              🚀
-            </span>
-          </div>
-        )}
+    <>
+      {showRocketAnimation && (
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none fixed bottom-[-4rem] left-[-4rem] z-50 block text-6xl transition-all duration-[3600ms] ease-linear md:text-7xl ${
+            isRocketInFlight
+              ? 'translate-x-[calc(100vw+10rem)] -translate-y-[calc(100vh+10rem)] opacity-0'
+              : 'translate-x-0 translate-y-0 opacity-100'
+          }`}
+        >
+          🚀
+        </span>
+      )}
+
+      <TerminalWindow>
+        <div className="space-y-4 text-lime-300">
         {openingLines.map((line) => (
           <p key={line}>{line}</p>
         ))}
         <p>Ready?</p>
-      </div>
+        </div>
 
-      <div className="mt-8 flex flex-col gap-3 md:flex-row">
-        <RetroButton onClick={() => setHasStarted(true)} className="md:min-w-40">
-          YES
-        </RetroButton>
-        <RetroButton className="md:min-w-40">NO</RetroButton>
-      </div>
+        <div className="mt-8 flex flex-col gap-3 md:flex-row">
+          <RetroButton onClick={() => setHasStarted(true)} className="md:min-w-40">
+            YES
+          </RetroButton>
+          <RetroButton className="md:min-w-40">NO</RetroButton>
+        </div>
 
-      {hasStarted && (
-        <div className="mt-8 space-y-4 rounded border border-lime-300 bg-lime-950/40 p-5 text-lime-200">
-          {puzzleLines.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
+        {hasStarted && (
+          <div className="mt-8 space-y-4 rounded border border-lime-300 bg-lime-950/40 p-5 text-lime-200">
+            {puzzleLines.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
 
-          <p className="text-2xl font-bold uppercase tracking-wider text-lime-100 md:text-4xl">EFC TUOFQBS</p>
+            <p className="text-2xl font-bold uppercase tracking-wider text-lime-100 md:text-4xl">EFC TUOFQBS</p>
 
-          <div className="pt-2">
-            <RetroButton onClick={onHintRequest} disabled={shownHintCount >= hints.length}>
-              Request hint
-            </RetroButton>
-          </div>
-
-          {shownHintCount > 0 && (
-            <div className="space-y-2 rounded border border-lime-500/50 bg-slate-950/60 p-4">
-              {hints.slice(0, shownHintCount).map((hint, index) => (
-                <p key={hint}>Hint {index + 1}: {hint}</p>
-              ))}
+            <div className="pt-2">
+              <RetroButton onClick={onHintRequest} disabled={shownHintCount >= hints.length}>
+                Request hint
+              </RetroButton>
             </div>
+
+            {shownHintCount > 0 && (
+              <div className="space-y-2 rounded border border-lime-500/50 bg-slate-950/60 p-4">
+                {hints.slice(0, shownHintCount).map((hint, index) => (
+                  <p key={hint}>Hint {index + 1}: {hint}</p>
+                ))}
+              </div>
+            )}
+          </div>
           )}
 
           <div className="pt-3">
