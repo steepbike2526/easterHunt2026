@@ -11,5 +11,8 @@ const base = configuredBasePath
 
 export default defineConfig({
   base,
-  plugins: [react()]
+  plugins: [react()],
+  build: {
+    sourcemap: true
+  }
 })
