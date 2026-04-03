@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import RetroButton from '../components/RetroButton'
 import TerminalWindow from '../components/TerminalWindow'
+import { ROUTES, getRoutePath } from '../services/routeService'
 import { normalizeAnswer } from '../utils/answerUtils'
 
 const initialAnswers = {
@@ -28,6 +30,7 @@ export default function FractionAssessmentPage() {
   const [answers, setAnswers] = useState(initialAnswers)
   const [isCorrect, setIsCorrect] = useState(false)
   const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   const allCorrect = useMemo(
     () =>
@@ -108,6 +111,10 @@ export default function FractionAssessmentPage() {
             <p>With pieces and plans and so much in store.</p>
             <p>Built or not, it’s ready for you,</p>
             <p>Go look at the box to find your next clue.</p>
+          </div>
+
+          <div className="pt-3">
+            <RetroButton onClick={() => navigate(getRoutePath(ROUTES.ROCKET_PUZZLE))}>Continue</RetroButton>
           </div>
         </div>
       )}
