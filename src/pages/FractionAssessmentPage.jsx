@@ -93,7 +93,7 @@ export default function FractionAssessmentPage() {
 
       {isCorrect && (
         <div className="mt-8 space-y-4 rounded border border-lime-300 bg-lime-950/40 p-5 text-lime-200">
-          <p>Gulp. Gulp.</p>
+          <p>Gulp...now I'm nervous.</p>
           <p>I knew you were good… but I didn’t realize just how much smarter you are than last year.</p>
           <p>Mr. Bunny will not be happy with me if I don’t give you a real challenge.</p>
           <p>I am sure this next clue will puzzle you.</p>
