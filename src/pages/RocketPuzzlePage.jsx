@@ -14,7 +14,7 @@ const openingLines = [
 const puzzleLines = [
   "So many places in this house for a little bunny nap.",
   "But where did this bunny hide the clue?",
-  "To find out where to look, you’ll need to decode this message:",
+  "To find out where to look, you’ll need to first shift your thinking before you can decode this message:",
 ];
 
 const hints = [
@@ -109,14 +109,6 @@ export default function RocketPuzzlePage() {
                 ))}
               </div>
             )}
-
-            <div className="pt-3">
-              <RetroButton
-                onClick={() => navigate(getRoutePath(ROUTES.FINAL_CHALLENGE))}
-              >
-                Continue to final challenge
-              </RetroButton>
-            </div>
           </div>
         )}
       </TerminalWindow>
