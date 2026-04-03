@@ -20,13 +20,13 @@ const challengeConfig = {
   math: {
     label: "Math",
     intro:
-      "Math Assessment Initiated… What number comes next in this pattern? 1, 4, 9, 16, __",
+      "Math Assessment Initiated… What number comes next in this pattern? 1, 1, 3, 3, 5, 8, __",
     feedback: [
       "Correct.",
       "Pattern recognition skills: impressive.",
       "Mathematical reasoning: above average.",
     ],
-    isCorrect: (value) => normalizeAnswer(value) === "25",
+    isCorrect: (value) => normalizeAnswer(value) === "13",
   },
   physical: {
     label: "Physical",
