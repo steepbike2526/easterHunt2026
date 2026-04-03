@@ -120,10 +120,21 @@ const createAudioController = () => {
     },
     playWinSound: () => {
       const startAt = context.currentTime + 0.01
-      playTone(523.25, 0.16, startAt, 'triangle', 0.05)
-      playTone(659.25, 0.16, startAt + 0.12, 'triangle', 0.05)
-      playTone(783.99, 0.2, startAt + 0.24, 'triangle', 0.055)
-      playTone(1046.5, 0.4, startAt + 0.4, 'sine', 0.06)
+      playTone(261.63, 0.5, startAt, 'sine', 0.03)
+      playTone(392, 0.32, startAt + 0.05, 'triangle', 0.05)
+      playTone(523.25, 0.32, startAt + 0.18, 'triangle', 0.055)
+      playTone(659.25, 0.4, startAt + 0.34, 'triangle', 0.06)
+      playTone(783.99, 0.45, startAt + 0.54, 'sine', 0.065)
+      playTone(1046.5, 0.65, startAt + 0.78, 'sine', 0.07)
+      playTone(1318.51, 0.65, startAt + 0.78, 'triangle', 0.05)
+      playTone(1567.98, 0.7, startAt + 1.04, 'triangle', 0.05)
+    },
+    playCrashSound: () => {
+      const startAt = context.currentTime + 0.01
+      playTone(220, 0.12, startAt, 'square', 0.055)
+      playTone(160, 0.16, startAt + 0.08, 'sawtooth', 0.05)
+      playTone(110, 0.22, startAt + 0.18, 'sawtooth', 0.055)
+      playTone(82.41, 0.28, startAt + 0.28, 'triangle', 0.05)
     },
     dispose: () => {
       void context.close()
@@ -142,7 +153,8 @@ const createInitialGameState = () => {
     score: 0,
     eggsEaten: 0,
     hasStarted: false,
-    isWon: false
+    isWon: false,
+    crashCount: 0
   }
 }
 
@@ -182,8 +194,9 @@ export default function SnakeEasterChallenge({ onWin }) {
   const audioControllerRef = useRef(null)
   const previousEggCountRef = useRef(0)
   const previousWonRef = useRef(false)
+  const previousCrashCountRef = useRef(0)
 
-  const { snake, food, eggStyle, score, eggsEaten, hasStarted, isWon } = gameState
+  const { snake, food, eggStyle, score, eggsEaten, hasStarted, isWon, crashCount } = gameState
 
   const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
   const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten), [eggsEaten])
@@ -235,7 +248,7 @@ export default function SnakeEasterChallenge({ onWin }) {
         const hitSelf = occupiedSegments.some((segment) => segment.x === nextHead.x && segment.y === nextHead.y)
 
         if (hitWall || hitSelf) {
-          return createInitialGameState()
+          return { ...createInitialGameState(), crashCount: prev.crashCount + 1 }
         }
 
         const nextSnake = [nextHead, ...prev.snake]
@@ -285,9 +298,14 @@ export default function SnakeEasterChallenge({ onWin }) {
       audioControllerRef.current?.playWinSound()
     }
 
+    if (crashCount > previousCrashCountRef.current) {
+      audioControllerRef.current?.playCrashSound()
+    }
+
     previousEggCountRef.current = eggsEaten
     previousWonRef.current = isWon
-  }, [eggsEaten, isWon])
+    previousCrashCountRef.current = crashCount
+  }, [crashCount, eggsEaten, isWon])
 
   const onTouchStart = (event) => {
     ensureAudioReady()
