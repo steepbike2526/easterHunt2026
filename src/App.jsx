@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import IntroPage from './pages/IntroPage'
 import AssessmentPage from './pages/AssessmentPage'
 import ClueOnePage from './pages/ClueOnePage'
+import FractionAssessmentPage from './pages/FractionAssessmentPage'
 import NotFoundPage from './pages/NotFoundPage'
 import { ROUTES, getRoutePath } from './services/routeService'
 
@@ -12,6 +13,7 @@ export default function App() {
         <Route path={getRoutePath(ROUTES.INTRO)} element={<IntroPage />} />
         <Route path={getRoutePath(ROUTES.ASSESSMENT)} element={<AssessmentPage />} />
         <Route path={getRoutePath(ROUTES.CLUE_ONE)} element={<ClueOnePage />} />
+        <Route path={getRoutePath(ROUTES.FRACTION_ASSESSMENT)} element={<FractionAssessmentPage />} />
         <Route path="/" element={<Navigate to={getRoutePath(ROUTES.INTRO)} replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
