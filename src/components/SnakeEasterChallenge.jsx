@@ -98,10 +98,10 @@ const createInitialGameState = () => {
   }
 }
 
-function EggSprite({ style, isSpecial }) {
+function EggSprite({ style, isSpecial, className = '' }) {
   if (isSpecial) {
     return (
-      <div className="relative z-10 -translate-x-1/4 -translate-y-1/4 h-8 w-6 animate-pulse rounded-[999px] border border-yellow-200 bg-yellow-400 shadow-[0_0_18px_4px_rgba(250,204,21,0.8)]">
+      <div className={`relative animate-pulse rounded-[999px] border border-yellow-200 bg-yellow-400 shadow-[0_0_18px_4px_rgba(250,204,21,0.8)] ${className}`}>
         <span className="absolute left-1 top-1 h-1.5 w-1.5 rounded-full bg-yellow-100" />
         <span className="absolute right-1 top-2 h-1.5 w-1.5 rounded-full bg-amber-200" />
         <span className="absolute left-2 top-4 h-0.5 w-2 rounded-full bg-yellow-100" />
@@ -280,13 +280,17 @@ export default function SnakeEasterChallenge({ onWin }) {
             const isFoodOrigin = food.x === x && food.y === y
 
             return (
-              <div key={`${x}-${y}`} className="flex aspect-square items-center justify-center border border-lime-950/20">
+              <div key={`${x}-${y}`} className="relative flex aspect-square items-center justify-center border border-lime-950/20">
                 {isSnake && <div className={`h-[70%] w-[70%] rounded-sm ${snakeColorClass}`} />}
                 {isFood && !food.isSpecial && <EggSprite style={eggStyle} />}
                 {isFood && food.isSpecial && (
                   isFoodOrigin
-                    ? <EggSprite style={eggStyle} isSpecial />
-                    : <div className="h-3 w-3 animate-pulse rounded-full bg-yellow-300/80 shadow-[0_0_10px_2px_rgba(250,204,21,0.7)]" />
+                    ? (
+                      <div className="pointer-events-none absolute inset-0 z-10 h-[200%] w-[200%]">
+                        <EggSprite style={eggStyle} isSpecial className="h-full w-full" />
+                      </div>
+                    )
+                    : null
                 )}
               </div>
             )
