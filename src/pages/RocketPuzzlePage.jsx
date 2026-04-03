@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import RetroButton from '../components/RetroButton'
 import TerminalWindow from '../components/TerminalWindow'
+import { ROUTES, getRoutePath } from '../services/routeService'
 
 const openingLines = [
   'Houston… we might have a problem.',
@@ -22,6 +24,7 @@ export default function RocketPuzzlePage() {
   const [shownHintCount, setShownHintCount] = useState(0)
   const [showRocketAnimation, setShowRocketAnimation] = useState(true)
   const [isRocketInFlight, setIsRocketInFlight] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const launchTimer = setTimeout(() => {
@@ -91,6 +94,10 @@ export default function RocketPuzzlePage() {
               ))}
             </div>
           )}
+
+          <div className="pt-3">
+            <RetroButton onClick={() => navigate(getRoutePath(ROUTES.FINAL_CHALLENGE))}>Continue to final challenge</RetroButton>
+          </div>
         </div>
       )}
     </TerminalWindow>
