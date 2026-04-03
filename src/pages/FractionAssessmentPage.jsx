@@ -113,8 +113,9 @@ export default function FractionAssessmentPage() {
             <p>Go look at the box to find your next clue.</p>
           </div>
 
-          <div className="pt-3">
+          <div className="flex flex-col gap-3 pt-3 md:flex-row">
             <RetroButton onClick={() => navigate(getRoutePath(ROUTES.ROCKET_PUZZLE))}>Continue</RetroButton>
+            <RetroButton onClick={() => navigate('/')}>Return to homepage</RetroButton>
           </div>
         </div>
       )}

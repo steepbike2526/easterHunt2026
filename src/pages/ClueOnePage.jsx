@@ -1,6 +1,10 @@
+import { useNavigate } from 'react-router-dom'
+import RetroButton from '../components/RetroButton'
 import TerminalWindow from '../components/TerminalWindow'
 
 export default function ClueOnePage() {
+  const navigate = useNavigate()
+
   return (
     <TerminalWindow>
       <h1 className="mb-6 text-2xl font-bold uppercase tracking-widest text-lime-200 md:text-4xl">Clue One</h1>
@@ -9,6 +13,10 @@ export default function ClueOnePage() {
         <p>That’s where you’ll find your next clue.</p>
         <p>On the wall, not on the ground,</p>
         <p>A traveler’s story can be found.</p>
+      </div>
+
+      <div className="mt-10">
+        <RetroButton onClick={() => navigate('/')}>Return to homepage</RetroButton>
       </div>
     </TerminalWindow>
   )
