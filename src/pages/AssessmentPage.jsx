@@ -8,7 +8,7 @@ import { isPositiveInteger, normalizeAnswer } from '../utils/answerUtils'
 const challengeConfig = {
   language: {
     label: 'Language',
-    intro: 'Language Assessment Initiated… Reorder the letters below to form a real word: T A E R S E',
+    intro: 'Language Assessment Initiated… Reorder the letters below to form a real word:\nT A E R S E',
     feedback: ['Correct.', 'Language processing skills: strong.', 'Seasonal awareness: excellent.'],
     isCorrect: (value) => normalizeAnswer(value) === 'easter'
   },
@@ -90,7 +90,7 @@ export default function AssessmentPage() {
 
       {activeChallenge && (
         <div className="mt-8 space-y-4 rounded border border-lime-400/50 bg-slate-950/60 p-4">
-          <p className="text-lime-200">{challengeConfig[activeChallenge].intro}</p>
+          <p className="whitespace-pre-line text-lime-200">{challengeConfig[activeChallenge].intro}</p>
           <input
             value={answers[activeChallenge]}
             onChange={(event) =>
