@@ -7,7 +7,7 @@ const base = configuredBasePath
   ? configuredBasePath.endsWith('/')
     ? configuredBasePath
     : `${configuredBasePath}/`
-  : '/'
+  : './'
 
 export default defineConfig({
   base,
