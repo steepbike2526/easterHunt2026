@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import RetroButton from '../components/RetroButton'
 import TerminalWindow from '../components/TerminalWindow'
 
@@ -20,6 +20,23 @@ const hints = ['First, shift each letter back by one.', 'Then, unscramble the wo
 export default function RocketPuzzlePage() {
   const [hasStarted, setHasStarted] = useState(false)
   const [shownHintCount, setShownHintCount] = useState(0)
+  const [showRocketAnimation, setShowRocketAnimation] = useState(true)
+  const [isRocketInFlight, setIsRocketInFlight] = useState(false)
+
+  useEffect(() => {
+    const launchTimer = setTimeout(() => {
+      setIsRocketInFlight(true)
+    }, 80)
+
+    const hideTimer = setTimeout(() => {
+      setShowRocketAnimation(false)
+    }, 1400)
+
+    return () => {
+      clearTimeout(launchTimer)
+      clearTimeout(hideTimer)
+    }
+  }, [])
 
   const onHintRequest = () => {
     setShownHintCount((prev) => Math.min(prev + 1, hints.length))
@@ -28,7 +45,18 @@ export default function RocketPuzzlePage() {
   return (
     <TerminalWindow>
       <div className="space-y-4 text-lime-300">
-        <p className="animate-pulse text-lime-200">(Rocket animation plays.)</p>
+        {showRocketAnimation && (
+          <div className="h-12 overflow-hidden">
+            <span
+              aria-hidden="true"
+              className={`block text-3xl transition-all duration-1000 ease-out ${
+                isRocketInFlight ? 'translate-x-[110%] -translate-y-6 opacity-0' : 'translate-x-0 translate-y-2 opacity-100'
+              }`}
+            >
+              🚀
+            </span>
+          </div>
+        )}
         {openingLines.map((line) => (
           <p key={line}>{line}</p>
         ))}
