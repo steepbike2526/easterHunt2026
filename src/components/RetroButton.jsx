@@ -1,4 +1,4 @@
-export default function RetroButton({ children, onClick, disabled = false, className = '' }) {
+export default function RetroButton({ children, onClick, disabled = false, className = '', type = 'button' }) {
   const baseStyles =
     'w-full rounded border-2 px-8 py-4 text-lg font-bold uppercase tracking-widest transition md:w-auto'
   const activeStyles =
@@ -6,7 +6,12 @@ export default function RetroButton({ children, onClick, disabled = false, class
   const disabledStyles = 'cursor-not-allowed border-slate-600 bg-slate-900 text-slate-500'
 
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={`${baseStyles} ${disabled ? disabledStyles : activeStyles} ${className}`}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseStyles} ${disabled ? disabledStyles : activeStyles} ${className}`}
+    >
       {children}
     </button>
   )
