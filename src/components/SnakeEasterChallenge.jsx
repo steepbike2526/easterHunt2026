@@ -77,6 +77,12 @@ const getRandomFood = (snake, eggNumber) => {
   }
 }
 
+const isTypingTarget = (target) => {
+  if (!(target instanceof HTMLElement)) return false
+  const tag = target.tagName.toLowerCase()
+  return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable
+}
+
 const createInitialGameState = () => {
   const initialSnake = createInitialSnake()
   return {
@@ -126,7 +132,7 @@ export default function SnakeEasterChallenge({ onWin }) {
   const [gameState, setGameState] = useState(createInitialGameState)
   const [touchStart, setTouchStart] = useState(null)
 
-  const { snake, direction, food, eggStyle, score, eggsEaten, hasStarted, isWon } = gameState
+  const { snake, food, eggStyle, score, eggsEaten, hasStarted, isWon } = gameState
 
   const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
   const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten), [eggsEaten])
@@ -136,14 +142,23 @@ export default function SnakeEasterChallenge({ onWin }) {
     setGameState(createInitialGameState())
   }, [])
 
-  const changeDirection = useCallback(
-    (nextDirection) => {
-      if (!isOppositeDirection(nextDirection, direction)) {
-        setGameState((prev) => ({ ...prev, pendingDirection: nextDirection }))
+  const changeDirection = useCallback((nextDirection, options = {}) => {
+    const { startIfStopped = false } = options
+
+    setGameState((prev) => {
+      if (prev.isWon) return prev
+
+      const nextPendingDirection = isOppositeDirection(nextDirection, prev.direction)
+        ? prev.pendingDirection
+        : nextDirection
+
+      return {
+        ...prev,
+        pendingDirection: nextPendingDirection,
+        hasStarted: startIfStopped ? true : prev.hasStarted
       }
-    },
-    [direction]
-  )
+    })
+  }, [])
 
   useEffect(() => {
     if (!hasStarted || isWon) {
@@ -215,9 +230,9 @@ export default function SnakeEasterChallenge({ onWin }) {
     }
 
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      changeDirection(deltaX > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 })
+      changeDirection(deltaX > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 }, { startIfStopped: true })
     } else {
-      changeDirection(deltaY > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 })
+      changeDirection(deltaY > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 }, { startIfStopped: true })
     }
   }
 
@@ -232,8 +247,10 @@ export default function SnakeEasterChallenge({ onWin }) {
     const onKeyDown = (event) => {
       const nextDirection = directionByKey[event.key]
       if (!nextDirection) return
+      if (isTypingTarget(event.target)) return
+
       event.preventDefault()
-      changeDirection(nextDirection)
+      changeDirection(nextDirection, { startIfStopped: true })
     }
 
     window.addEventListener('keydown', onKeyDown)
