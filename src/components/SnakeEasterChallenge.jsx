@@ -90,8 +90,11 @@ const createAudioController = () => {
   if (!AudioContextClass) return null
 
   const context = new AudioContextClass()
+  let isDisposed = false
 
   const playTone = (frequency, duration, startAt, type = 'sine', gainValue = 0.06) => {
+    if (isDisposed || context.state === 'closed') return
+
     const oscillator = context.createOscillator()
     const gainNode = context.createGain()
 
@@ -107,36 +110,52 @@ const createAudioController = () => {
     oscillator.stop(startAt + duration)
   }
 
+  const ensureContextRunning = async () => {
+    if (isDisposed || context.state === 'closed') return false
+    if (context.state === 'suspended' || context.state === 'interrupted') {
+      await context.resume()
+    }
+    return context.state === 'running'
+  }
+
+  const playWhenReady = async (playback) => {
+    const canPlay = await ensureContextRunning()
+    if (!canPlay) return
+    playback(context.currentTime + 0.01)
+  }
+
   return {
     resume: () => {
-      if (context.state === 'suspended') {
-        void context.resume()
-      }
+      void ensureContextRunning()
     },
     playEggSound: () => {
-      const startAt = context.currentTime + 0.01
-      playTone(660, 0.09, startAt, 'triangle', 0.045)
-      playTone(880, 0.12, startAt + 0.045, 'triangle', 0.04)
+      void playWhenReady((startAt) => {
+        playTone(660, 0.09, startAt, 'triangle', 0.045)
+        playTone(880, 0.12, startAt + 0.045, 'triangle', 0.04)
+      })
     },
     playWinSound: () => {
-      const startAt = context.currentTime + 0.01
-      playTone(261.63, 0.5, startAt, 'sine', 0.03)
-      playTone(392, 0.32, startAt + 0.05, 'triangle', 0.05)
-      playTone(523.25, 0.32, startAt + 0.18, 'triangle', 0.055)
-      playTone(659.25, 0.4, startAt + 0.34, 'triangle', 0.06)
-      playTone(783.99, 0.45, startAt + 0.54, 'sine', 0.065)
-      playTone(1046.5, 0.65, startAt + 0.78, 'sine', 0.07)
-      playTone(1318.51, 0.65, startAt + 0.78, 'triangle', 0.05)
-      playTone(1567.98, 0.7, startAt + 1.04, 'triangle', 0.05)
+      void playWhenReady((startAt) => {
+        playTone(261.63, 0.5, startAt, 'sine', 0.03)
+        playTone(392, 0.32, startAt + 0.05, 'triangle', 0.05)
+        playTone(523.25, 0.32, startAt + 0.18, 'triangle', 0.055)
+        playTone(659.25, 0.4, startAt + 0.34, 'triangle', 0.06)
+        playTone(783.99, 0.45, startAt + 0.54, 'sine', 0.065)
+        playTone(1046.5, 0.65, startAt + 0.78, 'sine', 0.07)
+        playTone(1318.51, 0.65, startAt + 0.78, 'triangle', 0.05)
+        playTone(1567.98, 0.7, startAt + 1.04, 'triangle', 0.05)
+      })
     },
     playCrashSound: () => {
-      const startAt = context.currentTime + 0.01
-      playTone(220, 0.12, startAt, 'square', 0.055)
-      playTone(160, 0.16, startAt + 0.08, 'sawtooth', 0.05)
-      playTone(110, 0.22, startAt + 0.18, 'sawtooth', 0.055)
-      playTone(82.41, 0.28, startAt + 0.28, 'triangle', 0.05)
+      void playWhenReady((startAt) => {
+        playTone(220, 0.12, startAt, 'square', 0.055)
+        playTone(160, 0.16, startAt + 0.08, 'sawtooth', 0.05)
+        playTone(110, 0.22, startAt + 0.18, 'sawtooth', 0.055)
+        playTone(82.41, 0.28, startAt + 0.28, 'triangle', 0.05)
+      })
     },
     dispose: () => {
+      isDisposed = true
       void context.close()
     }
   }
