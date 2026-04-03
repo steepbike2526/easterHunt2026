@@ -33,10 +33,18 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Prepare Pages artifact with source files
+        run: |
+          rm -rf .pages-artifact
+          mkdir -p .pages-artifact/source
+          cp -R dist/. .pages-artifact/
+          cp -R src/. .pages-artifact/source/
+          cp vite.config.js package.json package-lock.json .pages-artifact/source/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./dist
+          path: ./.pages-artifact
 
   deploy:
     environment:
