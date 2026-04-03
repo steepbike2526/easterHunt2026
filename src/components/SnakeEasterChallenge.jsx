@@ -44,6 +44,8 @@ const snakeColorForEggCount = (eggCount) => {
   return 'bg-lime-300'
 }
 
+const backgroundBeatForTick = (tickMs) => Math.max(80, Math.floor(tickMs * 1.5))
+
 const getEggCells = (food) => {
   const size = food.size ?? 1
   const cells = []
@@ -91,6 +93,11 @@ const createAudioController = () => {
 
   const context = new AudioContextClass()
   let isDisposed = false
+  let backgroundLoopHandle = null
+  let backgroundBeatMs = backgroundBeatForTick(speedForEggCount(0))
+  let backgroundStep = 0
+  const melody = [523.25, 659.25, 783.99, 659.25, 880, 783.99, 659.25, 523.25]
+  const bassline = [130.81, 146.83, 164.81, 146.83]
 
   const playTone = (frequency, duration, startAt, type = 'sine', gainValue = 0.06) => {
     if (isDisposed || context.state === 'closed') return
@@ -124,9 +131,56 @@ const createAudioController = () => {
     playback(context.currentTime + 0.01)
   }
 
+  const playBackgroundStep = () => {
+    if (isDisposed || context.state !== 'running') return
+
+    const startAt = context.currentTime + 0.01
+    const melodyFrequency = melody[backgroundStep % melody.length]
+    playTone(melodyFrequency, 0.1, startAt, 'square', 0.018)
+
+    if (backgroundStep % 2 === 0) {
+      const bassFrequency = bassline[Math.floor(backgroundStep / 2) % bassline.length]
+      playTone(bassFrequency, 0.18, startAt, 'triangle', 0.014)
+    }
+
+    backgroundStep += 1
+  }
+
+  const stopBackgroundLoop = () => {
+    if (backgroundLoopHandle !== null) {
+      window.clearInterval(backgroundLoopHandle)
+      backgroundLoopHandle = null
+    }
+  }
+
+  const startBackgroundLoop = () => {
+    if (isDisposed || context.state !== 'running' || backgroundLoopHandle !== null) return
+    playBackgroundStep()
+    backgroundLoopHandle = window.setInterval(playBackgroundStep, backgroundBeatMs)
+  }
+
+  const restartBackgroundLoop = () => {
+    stopBackgroundLoop()
+    startBackgroundLoop()
+  }
+
   return {
-    resume: () => {
-      void ensureContextRunning()
+    resume: async () => ensureContextRunning(),
+    startBackgroundLoop: () => {
+      void ensureContextRunning().then((canPlay) => {
+        if (!canPlay) return
+        startBackgroundLoop()
+      })
+    },
+    stopBackgroundLoop: () => {
+      stopBackgroundLoop()
+    },
+    setBackgroundBeatMs: (nextBeatMs) => {
+      if (backgroundBeatMs === nextBeatMs) return
+      backgroundBeatMs = nextBeatMs
+      if (backgroundLoopHandle !== null) {
+        restartBackgroundLoop()
+      }
     },
     playEggSound: () => {
       void playWhenReady((startAt) => {
@@ -156,6 +210,7 @@ const createAudioController = () => {
     },
     dispose: () => {
       isDisposed = true
+      stopBackgroundLoop()
       void context.close()
     }
   }
@@ -307,6 +362,20 @@ export default function SnakeEasterChallenge({ onWin }) {
     audioControllerRef.current?.dispose()
     audioControllerRef.current = null
   }, [])
+
+  useEffect(() => {
+    if (!audioControllerRef.current) return
+
+    const backgroundBeatMs = backgroundBeatForTick(tickMs)
+    audioControllerRef.current.setBackgroundBeatMs(backgroundBeatMs)
+
+    if (hasStarted && !isWon) {
+      audioControllerRef.current.startBackgroundLoop()
+      return
+    }
+
+    audioControllerRef.current.stopBackgroundLoop()
+  }, [hasStarted, isWon, tickMs])
 
   useEffect(() => {
     if (eggsEaten > previousEggCountRef.current) {
