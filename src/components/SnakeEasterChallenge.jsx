@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 const GRID_SIZE = 20
 const WIN_SCORE = 100
+const MIN_SWIPE_DISTANCE = 24
 
 const pastelColors = ['bg-pink-200', 'bg-purple-200', 'bg-yellow-200', 'bg-cyan-200', 'bg-emerald-200']
 const accentColors = ['bg-pink-500', 'bg-purple-500', 'bg-yellow-500', 'bg-cyan-500', 'bg-emerald-500']
@@ -170,6 +171,11 @@ export default function SnakeEasterChallenge({ onWin }) {
     const touch = event.changedTouches[0]
     const deltaX = touch.clientX - touchStart.x
     const deltaY = touch.clientY - touchStart.y
+    setTouchStart(null)
+
+    if (Math.abs(deltaX) < MIN_SWIPE_DISTANCE && Math.abs(deltaY) < MIN_SWIPE_DISTANCE) {
+      return
+    }
 
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
       changeDirection(deltaX > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 })
@@ -177,6 +183,25 @@ export default function SnakeEasterChallenge({ onWin }) {
       changeDirection(deltaY > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 })
     }
   }
+
+  useEffect(() => {
+    const directionByKey = {
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 }
+    }
+
+    const onKeyDown = (event) => {
+      const nextDirection = directionByKey[event.key]
+      if (!nextDirection) return
+      event.preventDefault()
+      changeDirection(nextDirection)
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [changeDirection])
 
   return (
     <div className="mt-6 space-y-4 rounded border border-lime-400/40 bg-slate-950/70 p-4">
@@ -215,11 +240,7 @@ export default function SnakeEasterChallenge({ onWin }) {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-sm text-lime-200 md:max-w-72">
-        <div />
-        <button type="button" onClick={() => changeDirection({ x: 0, y: -1 })} className="rounded border border-lime-400 px-3 py-2">↑</button>
-        <div />
-        <button type="button" onClick={() => changeDirection({ x: -1, y: 0 })} className="rounded border border-lime-400 px-3 py-2">←</button>
+      <div className="grid grid-cols-2 gap-2 text-sm text-lime-200 md:max-w-72">
         <button
           type="button"
           onClick={() => setHasStarted((prev) => !prev)}
@@ -227,11 +248,11 @@ export default function SnakeEasterChallenge({ onWin }) {
         >
           {hasStarted ? 'Pause' : 'Start'}
         </button>
-        <button type="button" onClick={() => changeDirection({ x: 1, y: 0 })} className="rounded border border-lime-400 px-3 py-2">→</button>
-        <div />
-        <button type="button" onClick={() => changeDirection({ x: 0, y: 1 })} className="rounded border border-lime-400 px-3 py-2">↓</button>
         <button type="button" onClick={resetGame} className="rounded border border-yellow-400 px-3 py-2 text-yellow-200">Reset</button>
       </div>
+      <p className="text-xs text-lime-200/80">
+        Use your keyboard arrow keys or swipe the board with one finger to steer the snake.
+      </p>
     </div>
   )
 }
