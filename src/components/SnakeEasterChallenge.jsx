@@ -154,16 +154,17 @@ export default function SnakeEasterChallenge({ onWin }) {
       setGameState((prev) => {
         const head = prev.snake[0]
         const nextHead = { x: head.x + prev.pendingDirection.x, y: head.y + prev.pendingDirection.y }
+        const foodCells = getEggCells(prev.food)
+        const ateEgg = foodCells.some((cell) => nextHead.x === cell.x && nextHead.y === cell.y)
 
         const hitWall = nextHead.x < 0 || nextHead.x >= GRID_SIZE || nextHead.y < 0 || nextHead.y >= GRID_SIZE
-        const hitSelf = prev.snake.some((segment) => segment.x === nextHead.x && segment.y === nextHead.y)
+        const occupiedSegments = ateEgg ? prev.snake : prev.snake.slice(0, -1)
+        const hitSelf = occupiedSegments.some((segment) => segment.x === nextHead.x && segment.y === nextHead.y)
 
         if (hitWall || hitSelf) {
           return createInitialGameState()
         }
 
-        const foodCells = getEggCells(prev.food)
-        const ateEgg = foodCells.some((cell) => nextHead.x === cell.x && nextHead.y === cell.y)
         const nextSnake = [nextHead, ...prev.snake]
 
         if (!ateEgg) {
