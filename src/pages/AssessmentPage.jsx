@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RetroButton from '../components/RetroButton'
 import TerminalWindow from '../components/TerminalWindow'
@@ -36,6 +36,17 @@ export default function AssessmentPage() {
   const navigate = useNavigate()
 
   const allComplete = useMemo(() => Object.values(completed).every(Boolean), [completed])
+
+  useEffect(() => {
+    if (!allComplete) {
+      return
+    }
+
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth'
+    })
+  }, [allComplete])
 
   const onChallengeSelect = (challengeKey) => {
     setActiveChallenge(challengeKey)
