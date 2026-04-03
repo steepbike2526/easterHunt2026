@@ -109,6 +109,10 @@ export default function RocketPuzzlePage() {
                 ))}
               </div>
             )}
+
+            <div className="pt-2">
+              <RetroButton onClick={() => navigate("/")}>Return to homepage</RetroButton>
+            </div>
           </div>
         )}
       </TerminalWindow>

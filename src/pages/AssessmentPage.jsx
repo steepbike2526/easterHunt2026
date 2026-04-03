@@ -126,7 +126,10 @@ export default function AssessmentPage() {
           <p>Challenge initiation detected. Elon vs. EasterBot is now in progress.</p>
           <p>Proceed to first clue. Initialize Bunny Hunt 2026.</p>
           <p>You may now initialize Bunny Hunt 2026.</p>
-          <RetroButton onClick={() => navigate(getRoutePath(ROUTES.CLUE_ONE))}>Proceed to first clue</RetroButton>
+          <div className="flex flex-col gap-3 md:flex-row">
+            <RetroButton onClick={() => navigate(getRoutePath(ROUTES.CLUE_ONE))}>Proceed to first clue</RetroButton>
+            <RetroButton onClick={() => navigate('/')}>Return to homepage</RetroButton>
+          </div>
         </div>
       )}
     </TerminalWindow>
