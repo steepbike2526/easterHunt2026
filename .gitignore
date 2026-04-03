@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+backend/.env
+backend/instance/
+backend/migrations/__pycache__/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# TypeScript build cache
+*.tsbuildinfo
