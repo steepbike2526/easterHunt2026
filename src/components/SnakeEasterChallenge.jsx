@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const GRID_SIZE = 20
 const WIN_SCORE = 100
@@ -83,6 +83,54 @@ const isTypingTarget = (target) => {
   return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable
 }
 
+const createAudioController = () => {
+  if (typeof window === 'undefined') return null
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext
+  if (!AudioContextClass) return null
+
+  const context = new AudioContextClass()
+
+  const playTone = (frequency, duration, startAt, type = 'sine', gainValue = 0.06) => {
+    const oscillator = context.createOscillator()
+    const gainNode = context.createGain()
+
+    oscillator.type = type
+    oscillator.frequency.setValueAtTime(frequency, startAt)
+    gainNode.gain.setValueAtTime(0.0001, startAt)
+    gainNode.gain.exponentialRampToValueAtTime(gainValue, startAt + 0.015)
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
+
+    oscillator.connect(gainNode)
+    gainNode.connect(context.destination)
+    oscillator.start(startAt)
+    oscillator.stop(startAt + duration)
+  }
+
+  return {
+    resume: () => {
+      if (context.state === 'suspended') {
+        void context.resume()
+      }
+    },
+    playEggSound: () => {
+      const startAt = context.currentTime + 0.01
+      playTone(660, 0.09, startAt, 'triangle', 0.045)
+      playTone(880, 0.12, startAt + 0.045, 'triangle', 0.04)
+    },
+    playWinSound: () => {
+      const startAt = context.currentTime + 0.01
+      playTone(523.25, 0.16, startAt, 'triangle', 0.05)
+      playTone(659.25, 0.16, startAt + 0.12, 'triangle', 0.05)
+      playTone(783.99, 0.2, startAt + 0.24, 'triangle', 0.055)
+      playTone(1046.5, 0.4, startAt + 0.4, 'sine', 0.06)
+    },
+    dispose: () => {
+      void context.close()
+    }
+  }
+}
+
 const createInitialGameState = () => {
   const initialSnake = createInitialSnake()
   return {
@@ -131,12 +179,22 @@ function EggSprite({ style, isSpecial, className = '' }) {
 export default function SnakeEasterChallenge({ onWin }) {
   const [gameState, setGameState] = useState(createInitialGameState)
   const [touchStart, setTouchStart] = useState(null)
+  const audioControllerRef = useRef(null)
+  const previousEggCountRef = useRef(0)
+  const previousWonRef = useRef(false)
 
   const { snake, food, eggStyle, score, eggsEaten, hasStarted, isWon } = gameState
 
   const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
   const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten), [eggsEaten])
   const foodCells = useMemo(() => getEggCells(food), [food])
+
+  const ensureAudioReady = useCallback(() => {
+    if (!audioControllerRef.current) {
+      audioControllerRef.current = createAudioController()
+    }
+    audioControllerRef.current?.resume()
+  }, [])
 
   const resetGame = useCallback(() => {
     setGameState(createInitialGameState())
@@ -213,7 +271,26 @@ export default function SnakeEasterChallenge({ onWin }) {
     onWin?.()
   }, [isWon, onWin])
 
+  useEffect(() => () => {
+    audioControllerRef.current?.dispose()
+    audioControllerRef.current = null
+  }, [])
+
+  useEffect(() => {
+    if (eggsEaten > previousEggCountRef.current) {
+      audioControllerRef.current?.playEggSound()
+    }
+
+    if (!previousWonRef.current && isWon) {
+      audioControllerRef.current?.playWinSound()
+    }
+
+    previousEggCountRef.current = eggsEaten
+    previousWonRef.current = isWon
+  }, [eggsEaten, isWon])
+
   const onTouchStart = (event) => {
+    ensureAudioReady()
     const touch = event.touches[0]
     setTouchStart({ x: touch.clientX, y: touch.clientY })
   }
@@ -250,12 +327,13 @@ export default function SnakeEasterChallenge({ onWin }) {
       if (isTypingTarget(event.target)) return
 
       event.preventDefault()
+      ensureAudioReady()
       changeDirection(nextDirection, { startIfStopped: true })
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [changeDirection])
+  }, [changeDirection, ensureAudioReady])
 
   return (
     <div className="mt-6 space-y-4 rounded border border-lime-400/40 bg-slate-950/70 p-4">
@@ -307,7 +385,10 @@ export default function SnakeEasterChallenge({ onWin }) {
       <div className="grid grid-cols-2 gap-2 text-sm text-lime-200 md:max-w-72">
         <button
           type="button"
-          onClick={() => setGameState((prev) => ({ ...prev, hasStarted: !prev.hasStarted }))}
+          onClick={() => {
+            ensureAudioReady()
+            setGameState((prev) => ({ ...prev, hasStarted: !prev.hasStarted }))
+          }}
           className="rounded border border-lime-300 bg-lime-900/40 px-3 py-2 font-semibold"
         >
           {hasStarted ? 'Pause' : 'Start'}
