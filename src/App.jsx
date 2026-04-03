@@ -5,6 +5,7 @@ import ClueOnePage from './pages/ClueOnePage'
 import FractionAssessmentPage from './pages/FractionAssessmentPage'
 import NotFoundPage from './pages/NotFoundPage'
 import RocketPuzzlePage from './pages/RocketPuzzlePage'
+import FinalChallengePage from './pages/FinalChallengePage'
 import { ROUTES, getRoutePath } from './services/routeService'
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
         <Route path={getRoutePath(ROUTES.CLUE_ONE)} element={<ClueOnePage />} />
         <Route path={getRoutePath(ROUTES.FRACTION_ASSESSMENT)} element={<FractionAssessmentPage />} />
         <Route path={getRoutePath(ROUTES.ROCKET_PUZZLE)} element={<RocketPuzzlePage />} />
+        <Route path={getRoutePath(ROUTES.FINAL_CHALLENGE)} element={<FinalChallengePage />} />
         <Route path="/" element={<Navigate to={getRoutePath(ROUTES.INTRO)} replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
