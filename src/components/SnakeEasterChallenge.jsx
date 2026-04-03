@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const GRID_SIZE = 20
 const WIN_SCORE = 100
@@ -34,6 +34,13 @@ const speedForEggCount = (eggCount) => {
   if (eggCount >= 20) return 120
   if (eggCount >= 10) return 145
   return 170
+}
+
+const snakeColorForEggCount = (eggCount) => {
+  if (eggCount >= 30) return 'bg-rose-500'
+  if (eggCount >= 20) return 'bg-rose-400'
+  if (eggCount >= 10) return 'bg-yellow-300'
+  return 'bg-lime-300'
 }
 
 const getRandomFood = (snake) => {
@@ -82,7 +89,11 @@ export default function SnakeEasterChallenge({ onWin }) {
   const [isWon, setIsWon] = useState(false)
   const [touchStart, setTouchStart] = useState(null)
 
+  const eggsEatenRef = useRef(0)
+  const scoreRef = useRef(0)
+
   const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
+  const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten), [eggsEaten])
 
   const resetGame = useCallback(() => {
     const initialSnake = createInitialSnake()
@@ -95,6 +106,8 @@ export default function SnakeEasterChallenge({ onWin }) {
     setEggsEaten(0)
     setHasStarted(false)
     setIsWon(false)
+    eggsEatenRef.current = 0
+    scoreRef.current = 0
   }, [])
 
   const changeDirection = useCallback(
@@ -109,6 +122,14 @@ export default function SnakeEasterChallenge({ onWin }) {
   const handleDeath = useCallback(() => {
     resetGame()
   }, [resetGame])
+
+  useEffect(() => {
+    eggsEatenRef.current = eggsEaten
+  }, [eggsEaten])
+
+  useEffect(() => {
+    scoreRef.current = score
+  }, [score])
 
   useEffect(() => {
     if (!hasStarted || isWon) {
@@ -137,20 +158,20 @@ export default function SnakeEasterChallenge({ onWin }) {
           return nextSnake
         }
 
-        setEggsEaten((prevEggs) => {
-          const newEggCount = prevEggs + 1
-          const earnedPoints = pointsForEgg(newEggCount)
-          setScore((prevScore) => {
-            const newScore = prevScore + earnedPoints
-            if (newScore >= WIN_SCORE) {
-              setIsWon(true)
-              setHasStarted(false)
-              onWin?.()
-            }
-            return newScore
-          })
-          return newEggCount
-        })
+        const newEggCount = eggsEatenRef.current + 1
+        const earnedPoints = pointsForEgg(newEggCount)
+        const newScore = scoreRef.current + earnedPoints
+
+        eggsEatenRef.current = newEggCount
+        scoreRef.current = newScore
+        setEggsEaten(newEggCount)
+        setScore(newScore)
+
+        if (newScore >= WIN_SCORE) {
+          setIsWon(true)
+          setHasStarted(false)
+          onWin?.()
+        }
 
         setFood(getRandomFood(nextSnake))
         setEggStyle(randomEggStyle())
@@ -226,7 +247,7 @@ export default function SnakeEasterChallenge({ onWin }) {
 
             return (
               <div key={`${x}-${y}`} className="flex aspect-square items-center justify-center border border-lime-950/20">
-                {isSnake && <div className="h-[70%] w-[70%] rounded-sm bg-lime-300" />}
+                {isSnake && <div className={`h-[70%] w-[70%] rounded-sm ${snakeColorClass}`} />}
                 {isFood && <EggSprite style={eggStyle} />}
               </div>
             )
