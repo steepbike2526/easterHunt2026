@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 const GRID_SIZE = 20
 const WIN_SCORE = 100
@@ -57,6 +57,21 @@ const getRandomFood = (snake) => {
   }
 }
 
+const createInitialGameState = () => {
+  const initialSnake = createInitialSnake()
+  return {
+    snake: initialSnake,
+    direction: { x: 1, y: 0 },
+    pendingDirection: { x: 1, y: 0 },
+    food: getRandomFood(initialSnake),
+    eggStyle: randomEggStyle(),
+    score: 0,
+    eggsEaten: 0,
+    hasStarted: false,
+    isWon: false
+  }
+}
+
 function EggSprite({ style }) {
   return (
     <div className={`relative h-4 w-3 rounded-[999px] ${style.shell}`}>
@@ -78,58 +93,26 @@ function EggSprite({ style }) {
 }
 
 export default function SnakeEasterChallenge({ onWin }) {
-  const [snake, setSnake] = useState(createInitialSnake)
-  const [direction, setDirection] = useState({ x: 1, y: 0 })
-  const [pendingDirection, setPendingDirection] = useState({ x: 1, y: 0 })
-  const [food, setFood] = useState(() => getRandomFood(createInitialSnake()))
-  const [eggStyle, setEggStyle] = useState(randomEggStyle)
-  const [score, setScore] = useState(0)
-  const [eggsEaten, setEggsEaten] = useState(0)
-  const [hasStarted, setHasStarted] = useState(false)
-  const [isWon, setIsWon] = useState(false)
+  const [gameState, setGameState] = useState(createInitialGameState)
   const [touchStart, setTouchStart] = useState(null)
 
-  const eggsEatenRef = useRef(0)
-  const scoreRef = useRef(0)
+  const { snake, direction, food, eggStyle, score, eggsEaten, hasStarted, isWon } = gameState
 
   const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
   const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten), [eggsEaten])
 
   const resetGame = useCallback(() => {
-    const initialSnake = createInitialSnake()
-    setSnake(initialSnake)
-    setDirection({ x: 1, y: 0 })
-    setPendingDirection({ x: 1, y: 0 })
-    setFood(getRandomFood(initialSnake))
-    setEggStyle(randomEggStyle())
-    setScore(0)
-    setEggsEaten(0)
-    setHasStarted(false)
-    setIsWon(false)
-    eggsEatenRef.current = 0
-    scoreRef.current = 0
+    setGameState(createInitialGameState())
   }, [])
 
   const changeDirection = useCallback(
     (nextDirection) => {
       if (!isOppositeDirection(nextDirection, direction)) {
-        setPendingDirection(nextDirection)
+        setGameState((prev) => ({ ...prev, pendingDirection: nextDirection }))
       }
     },
     [direction]
   )
-
-  const handleDeath = useCallback(() => {
-    resetGame()
-  }, [resetGame])
-
-  useEffect(() => {
-    eggsEatenRef.current = eggsEaten
-  }, [eggsEaten])
-
-  useEffect(() => {
-    scoreRef.current = score
-  }, [score])
 
   useEffect(() => {
     if (!hasStarted || isWon) {
@@ -137,50 +120,50 @@ export default function SnakeEasterChallenge({ onWin }) {
     }
 
     const timer = setInterval(() => {
-      setDirection(pendingDirection)
-      setSnake((currentSnake) => {
-        const head = currentSnake[0]
-        const nextHead = { x: head.x + pendingDirection.x, y: head.y + pendingDirection.y }
+      setGameState((prev) => {
+        const head = prev.snake[0]
+        const nextHead = { x: head.x + prev.pendingDirection.x, y: head.y + prev.pendingDirection.y }
 
         const hitWall = nextHead.x < 0 || nextHead.x >= GRID_SIZE || nextHead.y < 0 || nextHead.y >= GRID_SIZE
-        const hitSelf = currentSnake.some((segment) => segment.x === nextHead.x && segment.y === nextHead.y)
+        const hitSelf = prev.snake.some((segment) => segment.x === nextHead.x && segment.y === nextHead.y)
 
         if (hitWall || hitSelf) {
-          handleDeath()
-          return currentSnake
+          return createInitialGameState()
         }
 
-        const ateEgg = nextHead.x === food.x && nextHead.y === food.y
-        const nextSnake = [nextHead, ...currentSnake]
+        const ateEgg = nextHead.x === prev.food.x && nextHead.y === prev.food.y
+        const nextSnake = [nextHead, ...prev.snake]
 
         if (!ateEgg) {
           nextSnake.pop()
-          return nextSnake
+          return { ...prev, snake: nextSnake, direction: prev.pendingDirection }
         }
 
-        const newEggCount = eggsEatenRef.current + 1
+        const newEggCount = prev.eggsEaten + 1
         const earnedPoints = pointsForEgg(newEggCount)
-        const newScore = scoreRef.current + earnedPoints
+        const newScore = prev.score + earnedPoints
 
-        eggsEatenRef.current = newEggCount
-        scoreRef.current = newScore
-        setEggsEaten(newEggCount)
-        setScore(newScore)
-
-        if (newScore >= WIN_SCORE) {
-          setIsWon(true)
-          setHasStarted(false)
-          onWin?.()
+        return {
+          ...prev,
+          snake: nextSnake,
+          direction: prev.pendingDirection,
+          food: getRandomFood(nextSnake),
+          eggStyle: randomEggStyle(),
+          score: newScore,
+          eggsEaten: newEggCount,
+          hasStarted: newScore >= WIN_SCORE ? false : prev.hasStarted,
+          isWon: newScore >= WIN_SCORE
         }
-
-        setFood(getRandomFood(nextSnake))
-        setEggStyle(randomEggStyle())
-        return nextSnake
       })
     }, tickMs)
 
     return () => clearInterval(timer)
-  }, [food, handleDeath, hasStarted, isWon, pendingDirection, tickMs])
+  }, [hasStarted, isWon, tickMs])
+
+  useEffect(() => {
+    if (!isWon) return
+    onWin?.()
+  }, [isWon, onWin])
 
   const onTouchStart = (event) => {
     const touch = event.touches[0]
@@ -264,7 +247,7 @@ export default function SnakeEasterChallenge({ onWin }) {
       <div className="grid grid-cols-2 gap-2 text-sm text-lime-200 md:max-w-72">
         <button
           type="button"
-          onClick={() => setHasStarted((prev) => !prev)}
+          onClick={() => setGameState((prev) => ({ ...prev, hasStarted: !prev.hasStarted }))}
           className="rounded border border-lime-300 bg-lime-900/40 px-3 py-2 font-semibold"
         >
           {hasStarted ? 'Pause' : 'Start'}
