@@ -45,6 +45,7 @@ const challengeOrder = ["language", "math", "physical"];
 
 export default function AssessmentPage() {
   const [activeChallenge, setActiveChallenge] = useState(null);
+  const [showMathHint, setShowMathHint] = useState(false);
   const [answers, setAnswers] = useState({
     language: "",
     math: "",
@@ -76,6 +77,7 @@ export default function AssessmentPage() {
 
   const onChallengeSelect = (challengeKey) => {
     setActiveChallenge(challengeKey);
+    setShowMathHint(false);
     setError("");
   };
 
@@ -94,6 +96,7 @@ export default function AssessmentPage() {
 
     setCompleted((prev) => ({ ...prev, [activeChallenge]: true }));
     setActiveChallenge(null);
+    setShowMathHint(false);
     setError("");
   };
 
@@ -141,6 +144,18 @@ export default function AssessmentPage() {
             placeholder="Enter your answer"
           />
           <RetroButton onClick={onSubmit}>Submit</RetroButton>
+          {activeChallenge === "math" && (
+            <div className="space-y-2">
+              <RetroButton onClick={() => setShowMathHint(true)}>
+                Request hint
+              </RetroButton>
+              {showMathHint && (
+                <p className="text-lime-300">
+                  Add the first two numbers to get the third.
+                </p>
+              )}
+            </div>
+          )}
           {error && <p className="text-red-400">{error}</p>}
         </div>
       )}
