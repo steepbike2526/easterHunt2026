@@ -24,13 +24,13 @@ const randomEggStyle = () => ({
 const isOppositeDirection = (next, current) => next.x + current.x === 0 && next.y + current.y === 0
 
 const speedForEggCount = (eggCount) => {
-  if (eggCount >= 30) return 80
-  if (eggCount >= 25) return 100
-  if (eggCount >= 20) return 110
-  if (eggCount >= 15) return 120
-  if (eggCount >= 10) return 130
-  if (eggCount >= 5) return 140
-  return 160
+  if (eggCount >= 30) return 90
+  if (eggCount >= 25) return 110
+  if (eggCount >= 20) return 120
+  if (eggCount >= 15) return 130
+  if (eggCount >= 10) return 140
+  if (eggCount >= 5) return 150
+  return 170
 }
 
 const snakeColorForEggCount = (eggCount, isBlinkPhase) => {
