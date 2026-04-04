@@ -31,13 +31,13 @@ const pointsForEgg = (eggNumber) => {
 }
 
 const speedForEggCount = (eggCount) => {
-  if (eggCount >= 30) return 110
-  if (eggCount >= 25) return 120
-  if (eggCount >= 20) return 130
-  if (eggCount >= 15) return 140
-  if (eggCount >= 10) return 150
-  if (eggCount >= 5) return 160
-  return 170
+  if (eggCount >= 30) return 80
+  if (eggCount >= 25) return 100
+  if (eggCount >= 20) return 110
+  if (eggCount >= 15) return 120
+  if (eggCount >= 10) return 130
+  if (eggCount >= 5) return 140
+  return 160
 }
 
 const snakeColorForEggCount = (eggCount, isBlinkPhase) => {
