@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const GRID_SIZE = 20
-const WIN_SCORE = 100
+const WIN_EGG_COUNT = 36
 const MIN_SWIPE_DISTANCE = 12
-const SPECIAL_EGG_NUMBER = 34
+const SPECIAL_EGG_NUMBER = 36
 
 const pastelColors = ['bg-pink-200', 'bg-purple-200', 'bg-yellow-200', 'bg-cyan-200', 'bg-emerald-200']
 const accentColors = ['bg-pink-500', 'bg-purple-500', 'bg-yellow-500', 'bg-cyan-500', 'bg-emerald-500']
@@ -22,13 +22,6 @@ const randomEggStyle = () => ({
 })
 
 const isOppositeDirection = (next, current) => next.x + current.x === 0 && next.y + current.y === 0
-
-const pointsForEgg = (eggNumber) => {
-  if (eggNumber <= 10) return 1
-  if (eggNumber <= 20) return 2
-  if (eggNumber <= 30) return 4
-  return 8
-}
 
 const speedForEggCount = (eggCount) => {
   if (eggCount >= 30) return 80
@@ -231,7 +224,6 @@ const createInitialGameState = () => {
     food: getRandomFood(initialSnake, 1),
     eggStyle: randomEggStyle(),
     collectedEggs: [],
-    score: 0,
     eggsEaten: 0,
     hasStarted: false,
     isWon: false,
@@ -269,11 +261,11 @@ function EggSprite({ style, isSpecial, className = '' }) {
   )
 }
 
-function WickerBasket({ collectedEggs }) {
+function Basket({ collectedEggs }) {
   return (
     <aside className="w-full max-w-[240px] rounded border border-amber-400/40 bg-amber-950/30 p-3">
       <p className="mb-2 text-sm font-semibold text-amber-100">
-        Wicker Basket: <span className="font-bold">{collectedEggs.length}</span> / {SPECIAL_EGG_NUMBER}
+        Basket: <span className="font-bold">{collectedEggs.length}</span> / {SPECIAL_EGG_NUMBER}
       </p>
       <div className="rounded border border-amber-600/60 bg-gradient-to-b from-amber-800/80 to-amber-900/90 p-2">
         <div className="grid max-h-[420px] grid-cols-6 content-start gap-1 overflow-hidden rounded bg-amber-950/40 p-1">
@@ -306,7 +298,7 @@ export default function SnakeEasterChallenge({ onWin }) {
   const previousCrashCountRef = useRef(0)
   const expandedContainerRef = useRef(null)
 
-  const { snake, food, eggStyle, collectedEggs, score, eggsEaten, hasStarted, isWon, crashCount } = gameState
+  const { snake, food, eggStyle, collectedEggs, eggsEaten, hasStarted, isWon, crashCount } = gameState
 
   const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
   const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten, isBlinkPhase), [eggsEaten, isBlinkPhase])
@@ -369,8 +361,7 @@ export default function SnakeEasterChallenge({ onWin }) {
         }
 
         const newEggCount = prev.eggsEaten + 1
-        const earnedPoints = pointsForEgg(newEggCount)
-        const newScore = prev.score + earnedPoints
+        const didWin = newEggCount >= WIN_EGG_COUNT
 
         return {
           ...prev,
@@ -386,10 +377,9 @@ export default function SnakeEasterChallenge({ onWin }) {
               size: prev.food.size ?? 1
             }
           ],
-          score: newScore,
           eggsEaten: newEggCount,
-          hasStarted: newScore >= WIN_SCORE ? false : prev.hasStarted,
-          isWon: newScore >= WIN_SCORE
+          hasStarted: didWin ? false : prev.hasStarted,
+          isWon: didWin
         }
       })
     }, tickMs)
@@ -538,9 +528,7 @@ export default function SnakeEasterChallenge({ onWin }) {
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-lime-100 md:text-base">
-        <p>Score: <span className="font-bold">{score}</span> / {WIN_SCORE}</p>
-        <p>Eggs: <span className="font-bold">{eggsEaten}</span></p>
-        <p>Next Egg Value: <span className="font-bold">{pointsForEgg(eggsEaten + 1)}</span></p>
+        <p>Eggs: <span className="font-bold">{eggsEaten}</span> / {WIN_EGG_COUNT}</p>
         {isExpandedView && (
           <button
             type="button"
@@ -595,7 +583,7 @@ export default function SnakeEasterChallenge({ onWin }) {
           )}
         </div>
 
-        {!isExpandedView && <WickerBasket collectedEggs={collectedEggs} />}
+        {!isExpandedView && <Basket collectedEggs={collectedEggs} />}
       </div>
 
       {!isExpandedView && (
