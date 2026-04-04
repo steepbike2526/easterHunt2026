@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const GRID_SIZE = 20
 const WIN_SCORE = 100
-const MIN_SWIPE_DISTANCE = 24
+const MIN_SWIPE_DISTANCE = 12
 const SPECIAL_EGG_NUMBER = 34
 
 const pastelColors = ['bg-pink-200', 'bg-purple-200', 'bg-yellow-200', 'bg-cyan-200', 'bg-emerald-200']
