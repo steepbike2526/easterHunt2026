@@ -250,7 +250,7 @@ function EggSprite({ style, isSpecial, className = '' }) {
   }
 
   return (
-    <div className={`relative h-4 w-3 rounded-[999px] ${style.shell}`}>
+    <div className={`relative rounded-[999px] ${style.shell} ${className}`}>
       {style.pattern === 'dots' && (
         <>
           <span className={`absolute left-0.5 top-1 h-1 w-1 rounded-full ${style.accent}`} />
@@ -502,29 +502,20 @@ export default function SnakeEasterChallenge({ onWin }) {
         isExpandedView ? 'fixed inset-0 z-50 overflow-hidden bg-slate-950 px-4 py-6 md:px-6' : 'mt-6'
       }`}
     >
-      {isExpandedView && (
-        <div className="absolute right-4 top-4 z-50">
-          <button
-            type="button"
-            aria-label="Exit full screen view"
-            onClick={() => setIsExpandedView(false)}
-            className="rounded border border-cyan-300 bg-slate-900/95 p-2 text-cyan-200"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-              <path
-                fillRule="evenodd"
-                d="M4.22 4.22a.75.75 0 0 1 1.06 0L10 8.94l4.72-4.72a.75.75 0 1 1 1.06 1.06L11.06 10l4.72 4.72a.75.75 0 1 1-1.06 1.06L10 11.06l-4.72 4.72a.75.75 0 1 1-1.06-1.06L8.94 10 4.22 5.28a.75.75 0 0 1 0-1.06Z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-      )}
-
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-lime-100 md:text-base">
         <p>Score: <span className="font-bold">{score}</span> / {WIN_SCORE}</p>
         <p>Eggs: <span className="font-bold">{eggsEaten}</span></p>
         <p>Next Egg Value: <span className="font-bold">{pointsForEgg(eggsEaten + 1)}</span></p>
+        {isExpandedView && (
+          <button
+            type="button"
+            aria-label="Exit full screen view"
+            onClick={() => setIsExpandedView(false)}
+            className="ml-auto rounded border border-cyan-300 bg-slate-900/95 px-3 py-1 text-xs font-semibold text-cyan-200 md:text-sm"
+          >
+            Exit Full Screen (Esc)
+          </button>
+        )}
       </div>
 
       <div className="relative">
@@ -546,7 +537,7 @@ export default function SnakeEasterChallenge({ onWin }) {
             return (
               <div key={`${x}-${y}`} className="relative flex aspect-square items-center justify-center border border-lime-950/20">
                 {isSnake && <div className={`h-[70%] w-[70%] rounded-sm ${snakeColorClass}`} />}
-                {isFood && !food.isSpecial && <EggSprite style={eggStyle} />}
+                {isFood && !food.isSpecial && <EggSprite style={eggStyle} className="h-[76%] w-[58%]" />}
                 {isFood && food.isSpecial && (
                   isFoodOrigin
                     ? (
