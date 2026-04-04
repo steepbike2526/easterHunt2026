@@ -31,16 +31,22 @@ const pointsForEgg = (eggNumber) => {
 }
 
 const speedForEggCount = (eggCount) => {
-  if (eggCount >= 30) return 95
-  if (eggCount >= 20) return 120
-  if (eggCount >= 10) return 145
+  if (eggCount >= 30) return 110
+  if (eggCount >= 25) return 120
+  if (eggCount >= 20) return 130
+  if (eggCount >= 15) return 140
+  if (eggCount >= 10) return 150
+  if (eggCount >= 5) return 160
   return 170
 }
 
-const snakeColorForEggCount = (eggCount) => {
-  if (eggCount >= 30) return 'bg-rose-500'
-  if (eggCount >= 20) return 'bg-rose-400'
+const snakeColorForEggCount = (eggCount, isBlinkPhase) => {
+  if (eggCount >= 30) return isBlinkPhase ? 'bg-rose-500' : 'bg-rose-700'
+  if (eggCount >= 25) return 'bg-rose-700'
+  if (eggCount >= 20) return 'bg-rose-500'
+  if (eggCount >= 15) return 'bg-amber-400'
   if (eggCount >= 10) return 'bg-yellow-300'
+  if (eggCount >= 5) return 'bg-lime-400'
   return 'bg-lime-300'
 }
 
@@ -265,6 +271,7 @@ function EggSprite({ style, isSpecial, className = '' }) {
 export default function SnakeEasterChallenge({ onWin }) {
   const [gameState, setGameState] = useState(createInitialGameState)
   const [touchStart, setTouchStart] = useState(null)
+  const [isBlinkPhase, setIsBlinkPhase] = useState(false)
   const audioControllerRef = useRef(null)
   const previousEggCountRef = useRef(0)
   const previousWonRef = useRef(false)
@@ -273,7 +280,7 @@ export default function SnakeEasterChallenge({ onWin }) {
   const { snake, food, eggStyle, score, eggsEaten, hasStarted, isWon, crashCount } = gameState
 
   const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
-  const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten), [eggsEaten])
+  const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten, isBlinkPhase), [eggsEaten, isBlinkPhase])
   const foodCells = useMemo(() => getEggCells(food), [food])
 
   const ensureAudioReady = useCallback(() => {
@@ -376,6 +383,19 @@ export default function SnakeEasterChallenge({ onWin }) {
 
     audioControllerRef.current.stopBackgroundLoop()
   }, [hasStarted, isWon, tickMs])
+
+  useEffect(() => {
+    if (eggsEaten < 30) {
+      setIsBlinkPhase(false)
+      return undefined
+    }
+
+    const blinkInterval = window.setInterval(() => {
+      setIsBlinkPhase((prev) => !prev)
+    }, 220)
+
+    return () => window.clearInterval(blinkInterval)
+  }, [eggsEaten])
 
   useEffect(() => {
     if (eggsEaten > previousEggCountRef.current) {
