@@ -5,6 +5,7 @@ import TerminalWindow from '../components/TerminalWindow'
 
 export default function FinalChallengePage() {
   const [showFinalMessage, setShowFinalMessage] = useState(false)
+  const [isSnakeVisible, setIsSnakeVisible] = useState(false)
 
   return (
     <TerminalWindow>
@@ -14,10 +15,10 @@ export default function FinalChallengePage() {
         <StreamingText text="This BunnyBot is running out of options. Mr. Bunny is not going to be happy about this." />
         <StreamingText text="So I am activating my final challenge. Difficulty level: maximum." />
         <StreamingText text="Score 100 points in Snake while collecting Easter eggs." />
-        <StreamingText text="This is your final test." />
+        <StreamingText text="This is your final test." onComplete={() => setIsSnakeVisible(true)} />
       </div>
 
-      <SnakeEasterChallenge onWin={() => setShowFinalMessage(true)} />
+      {isSnakeVisible && <SnakeEasterChallenge onWin={() => setShowFinalMessage(true)} />}
 
       {showFinalMessage && (
         <div className="mt-6 space-y-3 rounded border border-lime-400/40 bg-slate-950/60 p-4 text-lime-200">

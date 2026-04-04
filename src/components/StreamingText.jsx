@@ -1,4 +1,4 @@
-import { useContext, useEffect, useId, useMemo, useState } from 'react'
+import { useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { STREAMING_TEXT_CHARACTER_DELAY_MS } from '../config/streamingText'
 import { StreamingTextSequenceContext } from './StreamingTextSequenceContext'
 
@@ -7,10 +7,12 @@ export default function StreamingText({
   as: Component = 'p',
   className = '',
   characterDelayMs = STREAMING_TEXT_CHARACTER_DELAY_MS,
+  onComplete,
   ...props
 }) {
   const [visibleCount, setVisibleCount] = useState(0)
   const streamId = useId()
+  const hasNotifiedCompletionRef = useRef(false)
   const sequenceContext = useContext(StreamingTextSequenceContext)
 
   const isSequenced = Boolean(sequenceContext)
@@ -37,6 +39,7 @@ export default function StreamingText({
 
   useEffect(() => {
     setVisibleCount(0)
+    hasNotifiedCompletionRef.current = false
   }, [text])
 
   useEffect(() => {
@@ -75,6 +78,21 @@ export default function StreamingText({
       markComplete?.(streamId)
     }
   }, [canAnimate, hasCompleted, isSequenced, markComplete, streamId, text, visibleCount])
+
+  useEffect(() => {
+    if (!onComplete) {
+      return
+    }
+
+    if (hasNotifiedCompletionRef.current) {
+      return
+    }
+
+    if (!text || hasCompleted || visibleCount >= text.length) {
+      hasNotifiedCompletionRef.current = true
+      onComplete()
+    }
+  }, [hasCompleted, onComplete, text, visibleCount])
 
   const displayText = hasCompleted ? text : text.slice(0, visibleCount)
 

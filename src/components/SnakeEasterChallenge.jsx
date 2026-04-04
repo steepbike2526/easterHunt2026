@@ -272,6 +272,7 @@ export default function SnakeEasterChallenge({ onWin }) {
   const [gameState, setGameState] = useState(createInitialGameState)
   const [touchStart, setTouchStart] = useState(null)
   const [isBlinkPhase, setIsBlinkPhase] = useState(false)
+  const [isExpandedView, setIsExpandedView] = useState(false)
   const audioControllerRef = useRef(null)
   const previousEggCountRef = useRef(0)
   const previousWonRef = useRef(false)
@@ -462,7 +463,11 @@ export default function SnakeEasterChallenge({ onWin }) {
   }, [changeDirection, ensureAudioReady])
 
   return (
-    <div className="mt-6 space-y-4 rounded border border-lime-400/40 bg-slate-950/70 p-4">
+    <div
+      className={`space-y-4 rounded border border-lime-400/40 bg-slate-950/70 p-4 ${
+        isExpandedView ? 'fixed inset-2 z-50 overflow-auto bg-slate-950/95' : 'mt-6'
+      }`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-lime-100 md:text-base">
         <p>Score: <span className="font-bold">{score}</span> / {WIN_SCORE}</p>
         <p>Eggs: <span className="font-bold">{eggsEaten}</span></p>
@@ -471,7 +476,9 @@ export default function SnakeEasterChallenge({ onWin }) {
 
       <div className="relative">
         <div
-          className="mx-auto grid max-w-[420px] touch-none rounded border border-lime-400/40 bg-black"
+          className={`mx-auto grid touch-none rounded border border-lime-400/40 bg-black ${
+            isExpandedView ? 'w-[min(92vw,92vh)] max-w-none' : 'w-full max-w-[420px]'
+          }`}
           style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
@@ -520,6 +527,13 @@ export default function SnakeEasterChallenge({ onWin }) {
           {hasStarted ? 'Pause' : 'Start'}
         </button>
         <button type="button" onClick={resetGame} className="rounded border border-yellow-400 px-3 py-2 text-yellow-200">Reset</button>
+        <button
+          type="button"
+          onClick={() => setIsExpandedView((previousValue) => !previousValue)}
+          className="col-span-2 rounded border border-cyan-300 px-3 py-2 text-cyan-200"
+        >
+          {isExpandedView ? 'Exit Expanded View' : 'Expanded View'}
+        </button>
       </div>
       <p className="text-xs text-lime-200/80">
         Use your keyboard arrow keys or swipe the board with one finger to steer the snake.
