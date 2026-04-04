@@ -242,9 +242,9 @@ function EggSprite({ style, isSpecial, className = '' }) {
   if (isSpecial) {
     return (
       <div className={`relative animate-pulse rounded-[999px] border border-yellow-200 bg-yellow-400 shadow-[0_0_18px_4px_rgba(250,204,21,0.8)] ${className}`}>
-        <span className="absolute left-1 top-1 h-1.5 w-1.5 rounded-full bg-yellow-100" />
-        <span className="absolute right-1 top-2 h-1.5 w-1.5 rounded-full bg-amber-200" />
-        <span className="absolute left-2 top-4 h-0.5 w-2 rounded-full bg-yellow-100" />
+        <span className="absolute left-[36%] top-[28%] h-[8%] w-[8%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-100" />
+        <span className="absolute left-[66%] top-[38%] h-[8%] w-[8%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-200" />
+        <span className="absolute left-1/2 top-[62%] h-[4%] w-[24%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-100" />
       </div>
     )
   }
@@ -253,17 +253,17 @@ function EggSprite({ style, isSpecial, className = '' }) {
     <div className={`relative rounded-[999px] ${style.shell} ${className}`}>
       {style.pattern === 'dots' && (
         <>
-          <span className={`absolute left-0.5 top-1 h-1 w-1 rounded-full ${style.accent}`} />
-          <span className={`absolute right-0.5 top-2 h-1 w-1 rounded-full ${style.accent}`} />
+          <span className={`absolute left-[34%] top-[34%] h-[12%] w-[12%] -translate-x-1/2 -translate-y-1/2 rounded-full ${style.accent}`} />
+          <span className={`absolute left-[66%] top-[54%] h-[12%] w-[12%] -translate-x-1/2 -translate-y-1/2 rounded-full ${style.accent}`} />
         </>
       )}
       {style.pattern === 'stripes' && (
         <>
-          <span className={`absolute left-0 top-1 h-0.5 w-full ${style.accent}`} />
-          <span className={`absolute left-0 top-2 h-0.5 w-full ${style.accent}`} />
+          <span className={`absolute left-0 top-[38%] h-[8%] w-full -translate-y-1/2 ${style.accent}`} />
+          <span className={`absolute left-0 top-[60%] h-[8%] w-full -translate-y-1/2 ${style.accent}`} />
         </>
       )}
-      {style.pattern === 'band' && <span className={`absolute left-1 top-0 h-full w-1 rounded-full ${style.accent}`} />}
+      {style.pattern === 'band' && <span className={`absolute left-1/2 top-0 h-full w-[16%] -translate-x-1/2 rounded-full ${style.accent}`} />}
     </div>
   )
 }
