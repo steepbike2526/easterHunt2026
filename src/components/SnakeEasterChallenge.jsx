@@ -261,9 +261,9 @@ function EggSprite({ style, isSpecial, className = '' }) {
   )
 }
 
-function Basket({ collectedEggs }) {
+function Basket({ collectedEggs, isExpandedView = false }) {
   return (
-    <aside className="w-full max-w-[240px] rounded border border-amber-400/40 bg-amber-950/30 p-3">
+    <aside className={`w-full rounded border border-amber-400/40 bg-amber-950/30 p-3 ${isExpandedView ? 'max-w-[280px]' : 'max-w-[240px]'}`}>
       <p className="mb-2 text-sm font-semibold text-amber-100">
         Basket: <span className="font-bold">{collectedEggs.length}</span> / {SPECIAL_EGG_NUMBER}
       </p>
@@ -541,7 +541,7 @@ export default function SnakeEasterChallenge({ onWin }) {
         )}
       </div>
 
-      <div className={`flex items-start gap-4 ${isExpandedView ? 'justify-center' : 'flex-wrap md:flex-nowrap'}`}>
+      <div className={`flex items-start gap-4 ${isExpandedView ? 'flex-wrap justify-center lg:flex-nowrap' : 'flex-wrap md:flex-nowrap'}`}>
         <div className="relative w-full">
           <div
             className={`mx-auto grid touch-none rounded border border-lime-400/40 bg-black ${
@@ -583,7 +583,7 @@ export default function SnakeEasterChallenge({ onWin }) {
           )}
         </div>
 
-        {!isExpandedView && <Basket collectedEggs={collectedEggs} />}
+        <Basket collectedEggs={collectedEggs} isExpandedView={isExpandedView} />
       </div>
 
       {!isExpandedView && (
