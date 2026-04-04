@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RetroButton from '../components/RetroButton'
+import StreamingText from '../components/StreamingText'
 import TerminalWindow from '../components/TerminalWindow'
 import { getRoutePathFromClueCode } from '../services/routeService'
 
@@ -26,9 +27,7 @@ export default function HomePage() {
   return (
     <TerminalWindow>
       <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-4">
-        <label htmlFor="clue-code" className="block text-lg text-lime-200">
-          Clue Code:
-        </label>
+        <StreamingText as="label" htmlFor="clue-code" text="Clue Code:" className="block text-lg text-lime-200" />
         <input
           id="clue-code"
           value={clueCode}
@@ -40,7 +39,7 @@ export default function HomePage() {
         <RetroButton type="submit" className="w-full">
           Submit
         </RetroButton>
-        {error && <p className="text-red-400">{error}</p>}
+        {error && <StreamingText text={error} className="text-red-400" />}
       </form>
     </TerminalWindow>
   )

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RetroButton from '../components/RetroButton'
+import StreamingText from '../components/StreamingText'
 import TerminalWindow from '../components/TerminalWindow'
 import { ROUTES, getRoutePath } from '../services/routeService'
 
@@ -31,9 +32,7 @@ export default function IntroPage() {
     <TerminalWindow>
       <div className="space-y-3 text-lime-300">
         {lines.slice(0, visibleCount).map((line) => (
-          <p key={line} className="text-base leading-relaxed md:text-xl">
-            &gt; {line}
-          </p>
+          <StreamingText key={line} text={`> ${line}`} className="text-base leading-relaxed md:text-xl" />
         ))}
         {visibleCount < lines.length && <p className="animate-blink text-lime-200">█</p>}
       </div>
