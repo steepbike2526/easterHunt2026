@@ -32,7 +32,82 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee build.log
+
+      - name: Validate build output
+        run: |
+          set -euo pipefail
+
+          if [ ! -f dist/index.html ]; then
+            echo "::error::Build completed but dist/index.html is missing."
+            exit 1
+          fi
+
+          if grep -Eq '(src|href)="/assets/' dist/index.html; then
+            echo "::error::index.html references /assets with an absolute path. This usually causes a blank page on project GitHub Pages sites."
+            echo "::error::Fix by setting the Vite base path (for example './' or '/<repo>/')."
+            exit 1
+          fi
+
+          missing_asset_count=0
+          while IFS= read -r asset_path; do
+            [ -z "$asset_path" ] && continue
+            normalized_path="${asset_path#./}"
+            normalized_path="${normalized_path#/}"
+            if [ ! -f "dist/$normalized_path" ]; then
+              echo "::error::Missing built asset referenced by index.html: $asset_path"
+              missing_asset_count=$((missing_asset_count + 1))
+            fi
+          done < <(grep -Eo '(src|href)="[^"]+"' dist/index.html \
+            | cut -d '"' -f2 \
+            | grep -E '^(./|assets/|/assets/)' || true)
+
+          if [ "$missing_asset_count" -gt 0 ]; then
+            echo "::error::Build output is inconsistent ($missing_asset_count missing assets)."
+            exit 1
+          fi
+
+      - name: Smoke test built site
+        run: |
+          set -euo pipefail
+          npm run preview -- --host 127.0.0.1 --port 4173 > preview.log 2>&1 &
+          preview_pid=$!
+
+          cleanup() {
+            if kill -0 "$preview_pid" 2>/dev/null; then
+              kill "$preview_pid" || true
+              wait "$preview_pid" 2>/dev/null || true
+            fi
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..20}; do
+            if curl --silent --show-error --fail http://127.0.0.1:4173 > preview.html; then
+              break
+            fi
+            sleep 1
+            if [ "$attempt" -eq 20 ]; then
+              echo "::error::Vite preview never became available. Check preview.log for details."
+              exit 1
+            fi
+          done
+
+          if ! grep -q '<div id="root"' preview.html; then
+            echo "::error::Rendered HTML is missing the React root node (<div id=\"root\">)."
+            exit 1
+          fi
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-build-diagnostics
+          path: |
+            build.log
+            preview.log
+            preview.html
 
       - name: Prepare Pages artifact with source files
         run: |
@@ -57,3 +132,9 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Explain deploy failure
+        if: failure()
+        run: |
+          echo "::error::GitHub Pages deploy failed after a successful build artifact upload."
+          echo "::error::Open the 'Deploy to GitHub Pages' step logs for the exact API error (permissions, environment protection, or Pages outage)."
