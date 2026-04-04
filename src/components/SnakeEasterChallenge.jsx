@@ -230,6 +230,7 @@ const createInitialGameState = () => {
     pendingDirection: { x: 1, y: 0 },
     food: getRandomFood(initialSnake, 1),
     eggStyle: randomEggStyle(),
+    collectedEggs: [],
     score: 0,
     eggsEaten: 0,
     hasStarted: false,
@@ -268,6 +269,32 @@ function EggSprite({ style, isSpecial, className = '' }) {
   )
 }
 
+function WickerBasket({ collectedEggs }) {
+  return (
+    <aside className="w-full max-w-[240px] rounded border border-amber-400/40 bg-amber-950/30 p-3">
+      <p className="mb-2 text-sm font-semibold text-amber-100">
+        Wicker Basket: <span className="font-bold">{collectedEggs.length}</span> / {SPECIAL_EGG_NUMBER}
+      </p>
+      <div className="rounded border border-amber-600/60 bg-gradient-to-b from-amber-800/80 to-amber-900/90 p-2">
+        <div className="grid max-h-[420px] grid-cols-6 content-start gap-1 overflow-hidden rounded bg-amber-950/40 p-1">
+          {collectedEggs.map((egg, index) => (
+            <div key={`basket-egg-${index}`} className="flex aspect-square items-center justify-center">
+              <EggSprite
+                style={egg.style}
+                isSpecial={egg.isSpecial}
+                className={`${egg.size > 1 ? 'h-[90%] w-[90%]' : 'h-[72%] w-[56%]'}`}
+              />
+            </div>
+          ))}
+          {Array.from({ length: Math.max(0, SPECIAL_EGG_NUMBER - collectedEggs.length) }).map((_, index) => (
+            <div key={`basket-slot-${index}`} className="aspect-square rounded border border-amber-700/40 bg-amber-950/20" />
+          ))}
+        </div>
+      </div>
+    </aside>
+  )
+}
+
 export default function SnakeEasterChallenge({ onWin }) {
   const [gameState, setGameState] = useState(createInitialGameState)
   const [touchStart, setTouchStart] = useState(null)
@@ -279,7 +306,7 @@ export default function SnakeEasterChallenge({ onWin }) {
   const previousCrashCountRef = useRef(0)
   const expandedContainerRef = useRef(null)
 
-  const { snake, food, eggStyle, score, eggsEaten, hasStarted, isWon, crashCount } = gameState
+  const { snake, food, eggStyle, collectedEggs, score, eggsEaten, hasStarted, isWon, crashCount } = gameState
 
   const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
   const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten, isBlinkPhase), [eggsEaten, isBlinkPhase])
@@ -351,6 +378,14 @@ export default function SnakeEasterChallenge({ onWin }) {
           direction: prev.pendingDirection,
           food: getRandomFood(nextSnake, newEggCount + 1),
           eggStyle: randomEggStyle(),
+          collectedEggs: [
+            ...prev.collectedEggs,
+            {
+              style: prev.eggStyle,
+              isSpecial: prev.food.isSpecial,
+              size: prev.food.size ?? 1
+            }
+          ],
           score: newScore,
           eggsEaten: newEggCount,
           hasStarted: newScore >= WIN_SCORE ? false : prev.hasStarted,
@@ -518,45 +553,49 @@ export default function SnakeEasterChallenge({ onWin }) {
         )}
       </div>
 
-      <div className="relative">
-        <div
-          className={`mx-auto grid touch-none rounded border border-lime-400/40 bg-black ${
-            isExpandedView ? 'w-[min(96vw,82vh)] max-w-none' : 'w-full max-w-[420px]'
-          }`}
-          style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-        >
-          {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, index) => {
-            const x = index % GRID_SIZE
-            const y = Math.floor(index / GRID_SIZE)
-            const isSnake = snake.some((segment) => segment.x === x && segment.y === y)
-            const isFood = foodCells.some((cell) => cell.x === x && cell.y === y)
-            const isFoodOrigin = food.x === x && food.y === y
+      <div className={`flex items-start gap-4 ${isExpandedView ? 'justify-center' : 'flex-wrap md:flex-nowrap'}`}>
+        <div className="relative w-full">
+          <div
+            className={`mx-auto grid touch-none rounded border border-lime-400/40 bg-black ${
+              isExpandedView ? 'w-[min(96vw,82vh)] max-w-none' : 'w-full max-w-[420px]'
+            }`}
+            style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+          >
+            {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, index) => {
+              const x = index % GRID_SIZE
+              const y = Math.floor(index / GRID_SIZE)
+              const isSnake = snake.some((segment) => segment.x === x && segment.y === y)
+              const isFood = foodCells.some((cell) => cell.x === x && cell.y === y)
+              const isFoodOrigin = food.x === x && food.y === y
 
-            return (
-              <div key={`${x}-${y}`} className="relative flex aspect-square items-center justify-center border border-lime-950/20">
-                {isSnake && <div className={`h-[70%] w-[70%] rounded-sm ${snakeColorClass}`} />}
-                {isFood && !food.isSpecial && <EggSprite style={eggStyle} className="h-[76%] w-[58%]" />}
-                {isFood && food.isSpecial && (
-                  isFoodOrigin
-                    ? (
-                      <div className="pointer-events-none absolute inset-0 z-10 h-[200%] w-[200%]">
-                        <EggSprite style={eggStyle} isSpecial className="h-full w-full" />
-                      </div>
-                    )
-                    : null
-                )}
-              </div>
-            )
-          })}
+              return (
+                <div key={`${x}-${y}`} className="relative flex aspect-square items-center justify-center border border-lime-950/20">
+                  {isSnake && <div className={`h-[70%] w-[70%] rounded-sm ${snakeColorClass}`} />}
+                  {isFood && !food.isSpecial && <EggSprite style={eggStyle} className="h-[76%] w-[58%]" />}
+                  {isFood && food.isSpecial && (
+                    isFoodOrigin
+                      ? (
+                        <div className="pointer-events-none absolute inset-0 z-10 h-[200%] w-[200%]">
+                          <EggSprite style={eggStyle} isSpecial className="h-full w-full" />
+                        </div>
+                      )
+                      : null
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {isWon && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+              <p className="text-center text-3xl font-black tracking-widest text-yellow-200 md:text-5xl">YOU WON!!!</p>
+            </div>
+          )}
         </div>
 
-        {isWon && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-            <p className="text-center text-3xl font-black tracking-widest text-yellow-200 md:text-5xl">YOU WON!!!</p>
-          </div>
-        )}
+        {!isExpandedView && <WickerBasket collectedEggs={collectedEggs} />}
       </div>
 
       {!isExpandedView && (
