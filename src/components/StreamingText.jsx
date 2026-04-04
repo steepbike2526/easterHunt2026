@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useId, useMemo, useState } from 'react'
 import { STREAMING_TEXT_CHARACTER_DELAY_MS } from '../config/streamingText'
+import { StreamingTextSequenceContext } from './StreamingTextSequenceContext'
 
 export default function StreamingText({
   text,
@@ -9,11 +10,45 @@ export default function StreamingText({
   ...props
 }) {
   const [visibleCount, setVisibleCount] = useState(0)
+  const streamId = useId()
+  const sequenceContext = useContext(StreamingTextSequenceContext)
+
+  const isSequenced = Boolean(sequenceContext)
+  const register = sequenceContext?.register
+  const unregister = sequenceContext?.unregister
+  const markComplete = sequenceContext?.markComplete
+  const activeId = sequenceContext?.activeId
+  const completedIds = sequenceContext?.completedIds ?? []
+
+  const hasCompleted = useMemo(() => completedIds.includes(streamId), [completedIds, streamId])
+  const canAnimate = !isSequenced || hasCompleted || activeId === streamId
+
+  useEffect(() => {
+    if (!isSequenced || !register || !unregister) {
+      return undefined
+    }
+
+    register(streamId)
+
+    return () => {
+      unregister(streamId)
+    }
+  }, [isSequenced, register, streamId, unregister])
 
   useEffect(() => {
     setVisibleCount(0)
+  }, [text])
 
+  useEffect(() => {
     if (!text) {
+      if (isSequenced && canAnimate) {
+        markComplete?.(streamId)
+      }
+
+      return undefined
+    }
+
+    if (!canAnimate || hasCompleted) {
       return undefined
     }
 
@@ -29,11 +64,23 @@ export default function StreamingText({
     }, characterDelayMs)
 
     return () => window.clearInterval(intervalId)
-  }, [characterDelayMs, text])
+  }, [canAnimate, characterDelayMs, hasCompleted, isSequenced, markComplete, streamId, text])
+
+  useEffect(() => {
+    if (!isSequenced || !canAnimate || !text || hasCompleted) {
+      return
+    }
+
+    if (visibleCount >= text.length) {
+      markComplete?.(streamId)
+    }
+  }, [canAnimate, hasCompleted, isSequenced, markComplete, streamId, text, visibleCount])
+
+  const displayText = hasCompleted ? text : text.slice(0, visibleCount)
 
   return (
     <Component className={className} {...props}>
-      {text.slice(0, visibleCount)}
+      {displayText}
     </Component>
   )
 }
