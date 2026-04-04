@@ -58,14 +58,16 @@ const getEggCells = (food) => {
   return cells
 }
 
-const getRandomFood = (snake, eggNumber) => {
+const getRandomFood = (snake, eggNumber, shouldAvoidWalls = false) => {
   const isSpecialEgg = eggNumber === SPECIAL_EGG_NUMBER
   const eggSize = isSpecialEgg ? 2 : 1
+  const minCoordinate = shouldAvoidWalls ? 1 : 0
+  const maxCoordinate = shouldAvoidWalls ? GRID_SIZE - eggSize - 1 : GRID_SIZE - eggSize
 
   while (true) {
     const candidate = {
-      x: Math.floor(Math.random() * (GRID_SIZE - eggSize + 1)),
-      y: Math.floor(Math.random() * (GRID_SIZE - eggSize + 1)),
+      x: Math.floor(Math.random() * (maxCoordinate - minCoordinate + 1)) + minCoordinate,
+      y: Math.floor(Math.random() * (maxCoordinate - minCoordinate + 1)) + minCoordinate,
       size: eggSize,
       isSpecial: isSpecialEgg
     }
@@ -215,19 +217,19 @@ const createAudioController = () => {
   }
 }
 
-const createInitialGameState = () => {
+const createInitialGameState = (crashCount = 0) => {
   const initialSnake = createInitialSnake()
   return {
     snake: initialSnake,
     direction: { x: 1, y: 0 },
     pendingDirection: { x: 1, y: 0 },
-    food: getRandomFood(initialSnake, 1),
+    food: getRandomFood(initialSnake, 1, crashCount >= 3),
     eggStyle: randomEggStyle(),
     collectedEggs: [],
     eggsEaten: 0,
     hasStarted: false,
     isWon: false,
-    crashCount: 0
+    crashCount
   }
 }
 
@@ -350,7 +352,8 @@ export default function SnakeEasterChallenge({ onWin }) {
         const hitSelf = occupiedSegments.some((segment) => segment.x === nextHead.x && segment.y === nextHead.y)
 
         if (hitWall || hitSelf) {
-          return { ...createInitialGameState(), crashCount: prev.crashCount + 1 }
+          const nextCrashCount = prev.crashCount + 1
+          return createInitialGameState(nextCrashCount)
         }
 
         const nextSnake = [nextHead, ...prev.snake]
@@ -367,7 +370,7 @@ export default function SnakeEasterChallenge({ onWin }) {
           ...prev,
           snake: nextSnake,
           direction: prev.pendingDirection,
-          food: getRandomFood(nextSnake, newEggCount + 1),
+          food: getRandomFood(nextSnake, newEggCount + 1, prev.crashCount >= 3),
           eggStyle: randomEggStyle(),
           collectedEggs: [
             ...prev.collectedEggs,
