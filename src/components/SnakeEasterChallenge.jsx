@@ -277,6 +277,7 @@ export default function SnakeEasterChallenge({ onWin }) {
   const previousEggCountRef = useRef(0)
   const previousWonRef = useRef(false)
   const previousCrashCountRef = useRef(0)
+  const expandedContainerRef = useRef(null)
 
   const { snake, food, eggStyle, score, eggsEaten, hasStarted, isWon, crashCount } = gameState
 
@@ -449,6 +450,12 @@ export default function SnakeEasterChallenge({ onWin }) {
     }
 
     const onKeyDown = (event) => {
+      if (event.key === 'Escape' && isExpandedView) {
+        event.preventDefault()
+        setIsExpandedView(false)
+        return
+      }
+
       const nextDirection = directionByKey[event.key]
       if (!nextDirection) return
       if (isTypingTarget(event.target)) return
@@ -460,14 +467,60 @@ export default function SnakeEasterChallenge({ onWin }) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [changeDirection, ensureAudioReady])
+  }, [changeDirection, ensureAudioReady, isExpandedView])
+
+  useEffect(() => {
+    if (!isExpandedView) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isExpandedView])
+
+  useEffect(() => {
+    const containerElement = expandedContainerRef.current
+    if (!isExpandedView || !containerElement) return undefined
+
+    const preventTouchDefault = (event) => {
+      event.preventDefault()
+    }
+
+    containerElement.addEventListener('touchmove', preventTouchDefault, { passive: false })
+
+    return () => {
+      containerElement.removeEventListener('touchmove', preventTouchDefault)
+    }
+  }, [isExpandedView])
 
   return (
     <div
-      className={`space-y-4 rounded border border-lime-400/40 bg-slate-950/70 p-4 ${
-        isExpandedView ? 'fixed inset-2 z-50 overflow-auto bg-slate-950/95' : 'mt-6'
+      ref={expandedContainerRef}
+      className={`space-y-4 rounded border border-lime-400/40 bg-slate-950/70 p-4 select-none ${
+        isExpandedView ? 'fixed inset-0 z-50 overflow-hidden bg-slate-950 px-4 py-6 md:px-6' : 'mt-6'
       }`}
     >
+      {isExpandedView && (
+        <div className="absolute right-4 top-4 z-50">
+          <button
+            type="button"
+            aria-label="Exit full screen view"
+            onClick={() => setIsExpandedView(false)}
+            className="rounded border border-cyan-300 bg-slate-900/95 p-2 text-cyan-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+              <path
+                fillRule="evenodd"
+                d="M4.22 4.22a.75.75 0 0 1 1.06 0L10 8.94l4.72-4.72a.75.75 0 1 1 1.06 1.06L11.06 10l4.72 4.72a.75.75 0 1 1-1.06 1.06L10 11.06l-4.72 4.72a.75.75 0 1 1-1.06-1.06L8.94 10 4.22 5.28a.75.75 0 0 1 0-1.06Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-lime-100 md:text-base">
         <p>Score: <span className="font-bold">{score}</span> / {WIN_SCORE}</p>
         <p>Eggs: <span className="font-bold">{eggsEaten}</span></p>
@@ -477,7 +530,7 @@ export default function SnakeEasterChallenge({ onWin }) {
       <div className="relative">
         <div
           className={`mx-auto grid touch-none rounded border border-lime-400/40 bg-black ${
-            isExpandedView ? 'w-[min(92vw,92vh)] max-w-none' : 'w-full max-w-[420px]'
+            isExpandedView ? 'w-[min(96vw,82vh)] max-w-none' : 'w-full max-w-[420px]'
           }`}
           style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
           onTouchStart={onTouchStart}
@@ -515,29 +568,33 @@ export default function SnakeEasterChallenge({ onWin }) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-sm text-lime-200 md:max-w-72">
-        <button
-          type="button"
-          onClick={() => {
-            ensureAudioReady()
-            setGameState((prev) => ({ ...prev, hasStarted: !prev.hasStarted }))
-          }}
-          className="rounded border border-lime-300 bg-lime-900/40 px-3 py-2 font-semibold"
-        >
-          {hasStarted ? 'Pause' : 'Start'}
-        </button>
-        <button type="button" onClick={resetGame} className="rounded border border-yellow-400 px-3 py-2 text-yellow-200">Reset</button>
-        <button
-          type="button"
-          onClick={() => setIsExpandedView((previousValue) => !previousValue)}
-          className="col-span-2 rounded border border-cyan-300 px-3 py-2 text-cyan-200"
-        >
-          {isExpandedView ? 'Exit Expanded View' : 'Expanded View'}
-        </button>
-      </div>
-      <p className="text-xs text-lime-200/80">
-        Use your keyboard arrow keys or swipe the board with one finger to steer the snake.
-      </p>
+      {!isExpandedView && (
+        <>
+          <div className="grid grid-cols-2 gap-2 text-sm text-lime-200 md:max-w-72">
+            <button
+              type="button"
+              onClick={() => {
+                ensureAudioReady()
+                setGameState((prev) => ({ ...prev, hasStarted: !prev.hasStarted }))
+              }}
+              className="rounded border border-lime-300 bg-lime-900/40 px-3 py-2 font-semibold"
+            >
+              {hasStarted ? 'Pause' : 'Start'}
+            </button>
+            <button type="button" onClick={resetGame} className="rounded border border-yellow-400 px-3 py-2 text-yellow-200">Reset</button>
+            <button
+              type="button"
+              onClick={() => setIsExpandedView((previousValue) => !previousValue)}
+              className="col-span-2 rounded border border-cyan-300 px-3 py-2 text-cyan-200"
+            >
+              Full Screen View
+            </button>
+          </div>
+          <p className="text-xs text-lime-200/80">
+            Use your keyboard arrow keys or swipe the board with one finger to steer the snake.
+          </p>
+        </>
+      )}
     </div>
   )
 }
