@@ -118,6 +118,36 @@ const createAudioController = () => {
     oscillator.stop(startAt + duration)
   }
 
+  const playCheerBurst = (startAt, duration = 0.2, gainValue = 0.02) => {
+    if (isDisposed || context.state === 'closed') return
+
+    const bufferSize = Math.max(1, Math.floor(context.sampleRate * duration))
+    const noiseBuffer = context.createBuffer(1, bufferSize, context.sampleRate)
+    const data = noiseBuffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i += 1) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize)
+    }
+
+    const noiseSource = context.createBufferSource()
+    noiseSource.buffer = noiseBuffer
+
+    const filterNode = context.createBiquadFilter()
+    filterNode.type = 'bandpass'
+    filterNode.frequency.setValueAtTime(1800, startAt)
+    filterNode.Q.setValueAtTime(1.1, startAt)
+
+    const gainNode = context.createGain()
+    gainNode.gain.setValueAtTime(0.0001, startAt)
+    gainNode.gain.exponentialRampToValueAtTime(gainValue, startAt + 0.015)
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
+
+    noiseSource.connect(filterNode)
+    filterNode.connect(gainNode)
+    gainNode.connect(context.destination)
+    noiseSource.start(startAt)
+    noiseSource.stop(startAt + duration)
+  }
+
   const ensureContextRunning = async () => {
     if (isDisposed || context.state === 'closed') return false
     if (context.state === 'suspended' || context.state === 'interrupted') {
@@ -191,6 +221,13 @@ const createAudioController = () => {
     },
     playWinSound: () => {
       void playWhenReady((startAt) => {
+        const fanfareNotes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98]
+        fanfareNotes.forEach((note, index) => {
+          const noteStart = startAt + index * 0.11
+          playTone(note, 0.24, noteStart, 'triangle', 0.055)
+          playTone(note * 2, 0.16, noteStart + 0.03, 'sine', 0.025)
+        })
+
         playTone(261.63, 0.5, startAt, 'sine', 0.03)
         playTone(392, 0.32, startAt + 0.05, 'triangle', 0.05)
         playTone(523.25, 0.32, startAt + 0.18, 'triangle', 0.055)
@@ -199,6 +236,11 @@ const createAudioController = () => {
         playTone(1046.5, 0.65, startAt + 0.78, 'sine', 0.07)
         playTone(1318.51, 0.65, startAt + 0.78, 'triangle', 0.05)
         playTone(1567.98, 0.7, startAt + 1.04, 'triangle', 0.05)
+
+        playCheerBurst(startAt + 0.12, 0.2, 0.016)
+        playCheerBurst(startAt + 0.36, 0.24, 0.018)
+        playCheerBurst(startAt + 0.62, 0.28, 0.02)
+        playCheerBurst(startAt + 0.95, 0.32, 0.022)
       })
     },
     playCrashSound: () => {
