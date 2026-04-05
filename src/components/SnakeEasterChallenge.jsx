@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const GRID_SIZE = 20;
 const WIN_EGG_COUNT = 36;
+const CHECKPOINT_EGG_COUNT = 27;
 const MIN_SWIPE_DISTANCE = 12;
 const SPECIAL_EGG_NUMBER = 36;
+const CHECKPOINT_FLASH_DURATION_MS = 1400;
 
 const pastelColors = [
   "bg-pink-200",
@@ -316,6 +318,32 @@ const createInitialGameState = (crashCount = 0) => {
     hasStarted: false,
     isWon: false,
     crashCount,
+    checkpointFlashId: 0,
+  };
+};
+
+const createCheckpointCollectedEggs = () =>
+  Array.from({ length: CHECKPOINT_EGG_COUNT }, () => ({
+    style: randomEggStyle(),
+    isSpecial: false,
+    size: 1,
+  }));
+
+const createCheckpointGameState = (crashCount, checkpointFlashId = 1) => {
+  const initialSnake = createInitialSnake();
+
+  return {
+    snake: initialSnake,
+    direction: { x: 1, y: 0 },
+    pendingDirection: { x: 1, y: 0 },
+    food: getRandomFood(initialSnake, CHECKPOINT_EGG_COUNT + 1, crashCount >= 3),
+    eggStyle: randomEggStyle(),
+    collectedEggs: createCheckpointCollectedEggs(),
+    eggsEaten: CHECKPOINT_EGG_COUNT,
+    hasStarted: false,
+    isWon: false,
+    crashCount,
+    checkpointFlashId,
   };
 };
 
@@ -405,6 +433,8 @@ export default function SnakeEasterChallenge({ onWin }) {
   const touchStartRef = useRef(null);
   const [isBlinkPhase, setIsBlinkPhase] = useState(false);
   const [isExpandedView, setIsExpandedView] = useState(false);
+  const [isCheckpointFlashVisible, setIsCheckpointFlashVisible] =
+    useState(false);
   const audioControllerRef = useRef(null);
   const previousEggCountRef = useRef(0);
   const previousWonRef = useRef(false);
@@ -420,6 +450,7 @@ export default function SnakeEasterChallenge({ onWin }) {
     hasStarted,
     isWon,
     crashCount,
+    checkpointFlashId,
   } = gameState;
 
   const tickMs = useMemo(
@@ -493,6 +524,15 @@ export default function SnakeEasterChallenge({ onWin }) {
 
         if (hitWall || hitSelf) {
           const nextCrashCount = prev.crashCount + 1;
+          const hasCheckpoint = prev.eggsEaten >= CHECKPOINT_EGG_COUNT;
+
+          if (hasCheckpoint) {
+            return createCheckpointGameState(
+              nextCrashCount,
+              prev.checkpointFlashId + 1,
+            );
+          }
+
           return createInitialGameState(nextCrashCount);
         }
 
@@ -560,6 +600,17 @@ export default function SnakeEasterChallenge({ onWin }) {
 
     audioControllerRef.current.stopBackgroundLoop();
   }, [hasStarted, isWon, tickMs]);
+
+  useEffect(() => {
+    if (checkpointFlashId === 0) return undefined;
+
+    setIsCheckpointFlashVisible(true);
+    const hideMessageTimeout = window.setTimeout(() => {
+      setIsCheckpointFlashVisible(false);
+    }, CHECKPOINT_FLASH_DURATION_MS);
+
+    return () => window.clearTimeout(hideMessageTimeout);
+  }, [checkpointFlashId]);
 
   useEffect(() => {
     if (eggsEaten < 30) {
@@ -703,6 +754,14 @@ export default function SnakeEasterChallenge({ onWin }) {
           >
             Exit Full Screen (Esc)
           </button>
+        )}
+      </div>
+
+      <div className="h-7 text-center">
+        {isCheckpointFlashVisible && (
+          <p className="text-lg font-black tracking-wide text-yellow-200 animate-pulse">
+            Checkpoint!
+          </p>
         )}
       </div>
 
