@@ -14,7 +14,7 @@ export default function FinalChallengePage() {
         <StreamingText text="Wow. You've solved every challenge I've given you." />
         <StreamingText text="This BunnyBot is running out of options. Mr. Bunny is not going to be happy about this." />
         <StreamingText text="So I am activating my final challenge. Difficulty level: maximum." />
-        <StreamingText text="Stanely the snake has never had a full basket of eggs for easter. If you can help him find enough easter eggs to completely fill his basket, I will consider giving you a basket this year." />
+        <StreamingText text="Stanley the snake has never had a full basket of eggs for easter. If you can help him find enough easter eggs to completely fill his basket, I will consider giving you a basket this year." />
         <StreamingText
           text="This is your final test."
           onComplete={() => setIsSnakeVisible(true)}

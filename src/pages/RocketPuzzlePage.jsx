@@ -119,7 +119,7 @@ export default function RocketPuzzlePage() {
             <SequencedReveal>
               <div className="pt-2">
                 <RetroButton onClick={() => navigate("/")}>
-                  Return to homepage
+                  Return to clue entry portal
                 </RetroButton>
               </div>
             </SequencedReveal>

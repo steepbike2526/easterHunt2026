@@ -186,8 +186,7 @@ export default function AssessmentPage() {
           <StreamingText text="Bunny Assessment complete. Analyzing results…" />
           <StreamingText text="Results indicate Elon is ready for Easter magic." />
           <StreamingText text="Challenge initiation detected. Elon vs. EasterBot is now in progress." />
-          <StreamingText text="Proceed to first clue. Initialize Easter Hunt 2026." />
-          <StreamingText text="You may now initialize Easter Hunt 2026." />
+          <StreamingText text="Initializing Easter Hunt 2026.......................proceed to first clue." />
           <SequencedReveal>
             <div className="flex flex-col gap-3 md:flex-row">
               <RetroButton
