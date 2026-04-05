@@ -335,14 +335,27 @@ const createInitialGameState = (crashCount = 0) => {
   };
 };
 
-const createCheckpointCollectedEggs = () =>
-  Array.from({ length: CHECKPOINT_EGG_COUNT }, () => ({
+const createCheckpointCollectedEggs = (savedEggs = null) => {
+  if (savedEggs && savedEggs.length >= CHECKPOINT_EGG_COUNT) {
+    return savedEggs.slice(0, CHECKPOINT_EGG_COUNT).map((egg) => ({
+      style: egg.style,
+      isSpecial: egg.isSpecial ?? false,
+      size: egg.size ?? 1,
+    }));
+  }
+
+  return Array.from({ length: CHECKPOINT_EGG_COUNT }, () => ({
     style: randomEggStyle(),
     isSpecial: false,
     size: 1,
   }));
+};
 
-const createCheckpointGameState = (crashCount, checkpointFlashId = 1) => {
+const createCheckpointGameState = (
+  crashCount,
+  checkpointFlashId = 1,
+  savedCheckpointEggs = null,
+) => {
   const checkpointSnake = createCheckpointSnake();
 
   return {
@@ -355,7 +368,7 @@ const createCheckpointGameState = (crashCount, checkpointFlashId = 1) => {
       crashCount >= 3,
     ),
     eggStyle: randomEggStyle(),
-    collectedEggs: createCheckpointCollectedEggs(),
+    collectedEggs: createCheckpointCollectedEggs(savedCheckpointEggs),
     eggsEaten: CHECKPOINT_EGG_COUNT,
     hasStarted: false,
     isWon: false,
@@ -547,6 +560,7 @@ export default function SnakeEasterChallenge({ onWin }) {
             return createCheckpointGameState(
               nextCrashCount,
               prev.checkpointFlashId + 1,
+              prev.collectedEggs,
             );
           }
 
