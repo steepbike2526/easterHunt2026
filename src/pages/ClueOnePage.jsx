@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import RetroButton from '../components/RetroButton'
+import SequencedReveal from '../components/SequencedReveal'
 import StreamingText from '../components/StreamingText'
 import TerminalWindow from '../components/TerminalWindow'
 
@@ -16,9 +17,11 @@ export default function ClueOnePage() {
         <StreamingText text="A traveler’s story can be found." />
       </div>
 
-      <div className="mt-10">
-        <RetroButton onClick={() => navigate('/')}>Return to homepage</RetroButton>
-      </div>
+      <SequencedReveal>
+        <div className="mt-10">
+          <RetroButton onClick={() => navigate('/')}>Return to homepage</RetroButton>
+        </div>
+      </SequencedReveal>
     </TerminalWindow>
   )
 }

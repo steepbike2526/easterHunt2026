@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RetroButton from "../components/RetroButton";
+import SequencedReveal from "../components/SequencedReveal";
 import StreamingText from "../components/StreamingText";
 import TerminalWindow from "../components/TerminalWindow";
 import { ROUTES, getRoutePath } from "../services/routeService";
@@ -110,17 +111,19 @@ export default function AssessmentPage() {
         <StreamingText text="Please make your selection:" />
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 md:flex-row">
-        {challengeOrder.map((key) => (
-          <RetroButton
-            key={key}
-            onClick={() => onChallengeSelect(key)}
-            disabled={completed[key]}
-          >
-            {challengeConfig[key].label}
-          </RetroButton>
-        ))}
-      </div>
+      <SequencedReveal>
+        <div className="mt-8 flex flex-col gap-3 md:flex-row">
+          {challengeOrder.map((key) => (
+            <RetroButton
+              key={key}
+              onClick={() => onChallengeSelect(key)}
+              disabled={completed[key]}
+            >
+              {challengeConfig[key].label}
+            </RetroButton>
+          ))}
+        </div>
+      </SequencedReveal>
 
       {activeChallenge && (
         <div className="mt-8 space-y-4 rounded border border-lime-400/50 bg-slate-950/60 p-4">
@@ -128,30 +131,36 @@ export default function AssessmentPage() {
             text={challengeConfig[activeChallenge].intro}
             className="whitespace-pre-line text-lime-200"
           />
-          <input
-            value={answers[activeChallenge]}
-            onChange={(event) =>
-              setAnswers((prev) => ({
-                ...prev,
-                [activeChallenge]: event.target.value,
-              }))
-            }
-            className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
-            placeholder="Enter your answer"
-          />
-          <RetroButton onClick={onSubmit}>Submit</RetroButton>
+          <SequencedReveal>
+            <input
+              value={answers[activeChallenge]}
+              onChange={(event) =>
+                setAnswers((prev) => ({
+                  ...prev,
+                  [activeChallenge]: event.target.value,
+                }))
+              }
+              className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
+              placeholder="Enter your answer"
+            />
+          </SequencedReveal>
+          <SequencedReveal>
+            <RetroButton onClick={onSubmit}>Submit</RetroButton>
+          </SequencedReveal>
           {activeChallenge === "math" && (
-            <div className="space-y-2">
-              <RetroButton onClick={() => setShowMathHint(true)}>
-                Request hint
-              </RetroButton>
-              {showMathHint && (
-                <StreamingText
-                  text="Add the first two numbers to get the third."
-                  className="text-lime-300"
-                />
-              )}
-            </div>
+            <SequencedReveal>
+              <div className="space-y-2">
+                <RetroButton onClick={() => setShowMathHint(true)}>
+                  Request hint
+                </RetroButton>
+                {showMathHint && (
+                  <StreamingText
+                    text="Add the first two numbers to get the third."
+                    className="text-lime-300"
+                  />
+                )}
+              </div>
+            </SequencedReveal>
           )}
           {error && <StreamingText text={error} className="text-red-400" />}
         </div>
@@ -179,13 +188,15 @@ export default function AssessmentPage() {
           <StreamingText text="Challenge initiation detected. Elon vs. EasterBot is now in progress." />
           <StreamingText text="Proceed to first clue. Initialize Bunny Hunt 2026." />
           <StreamingText text="You may now initialize Bunny Hunt 2026." />
-          <div className="flex flex-col gap-3 md:flex-row">
-            <RetroButton
-              onClick={() => navigate(getRoutePath(ROUTES.CLUE_ONE))}
-            >
-              Proceed to first clue
-            </RetroButton>
-          </div>
+          <SequencedReveal>
+            <div className="flex flex-col gap-3 md:flex-row">
+              <RetroButton
+                onClick={() => navigate(getRoutePath(ROUTES.CLUE_ONE))}
+              >
+                Proceed to first clue
+              </RetroButton>
+            </div>
+          </SequencedReveal>
         </div>
       )}
     </TerminalWindow>

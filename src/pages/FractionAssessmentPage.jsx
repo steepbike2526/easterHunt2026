@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RetroButton from '../components/RetroButton'
+import SequencedReveal from '../components/SequencedReveal'
 import StreamingText from '../components/StreamingText'
 import TerminalWindow from '../components/TerminalWindow'
 import { normalizeAnswer } from '../utils/answerUtils'
@@ -67,30 +68,38 @@ export default function FractionAssessmentPage() {
       <div className="mt-8 space-y-4 rounded border border-lime-400/50 bg-slate-950/60 p-4 text-lime-200">
         <StreamingText text="Fraction Assessment Initiated…" className="font-semibold" />
         <StreamingText text="1.What is an equivalent fraction to 1/2 with a denominator of 10?" />
-        <input
-          value={answers.denominatorTen}
-          onChange={(event) => onAnswerChange('denominatorTen', event.target.value)}
-          className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
-          placeholder="Enter your answer"
-        />
+        <SequencedReveal>
+          <input
+            value={answers.denominatorTen}
+            onChange={(event) => onAnswerChange('denominatorTen', event.target.value)}
+            className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
+            placeholder="Enter your answer"
+          />
+        </SequencedReveal>
 
         <StreamingText text="2. Which fraction is larger: 3/4 or 5/8?" />
-        <input
-          value={answers.largerFraction}
-          onChange={(event) => onAnswerChange('largerFraction', event.target.value)}
-          className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
-          placeholder="Enter your answer"
-        />
+        <SequencedReveal>
+          <input
+            value={answers.largerFraction}
+            onChange={(event) => onAnswerChange('largerFraction', event.target.value)}
+            className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
+            placeholder="Enter your answer"
+          />
+        </SequencedReveal>
 
         <StreamingText text="3. Simplify: 6/8" />
-        <input
-          value={answers.simplifiedFraction}
-          onChange={(event) => onAnswerChange('simplifiedFraction', event.target.value)}
-          className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
-          placeholder="Enter your answer"
-        />
+        <SequencedReveal>
+          <input
+            value={answers.simplifiedFraction}
+            onChange={(event) => onAnswerChange('simplifiedFraction', event.target.value)}
+            className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
+            placeholder="Enter your answer"
+          />
+        </SequencedReveal>
 
-        <RetroButton onClick={onSubmit}>Submit</RetroButton>
+        <SequencedReveal>
+          <RetroButton onClick={onSubmit}>Submit</RetroButton>
+        </SequencedReveal>
         {error && <StreamingText text={error} className="text-red-400" />}
       </div>
 
@@ -117,9 +126,11 @@ export default function FractionAssessmentPage() {
             <StreamingText text="Go look at the box to find your next clue." />
           </div>
 
-          <div className="flex flex-col gap-3 pt-3 md:flex-row">
-            <RetroButton onClick={() => navigate('/')}>Return to homepage</RetroButton>
-          </div>
+          <SequencedReveal>
+            <div className="flex flex-col gap-3 pt-3 md:flex-row">
+              <RetroButton onClick={() => navigate('/')}>Return to homepage</RetroButton>
+            </div>
+          </SequencedReveal>
         </div>
       )}
     </TerminalWindow>
