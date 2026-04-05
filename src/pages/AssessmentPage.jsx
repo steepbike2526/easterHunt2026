@@ -1,76 +1,105 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import RetroButton from '../components/RetroButton'
-import StreamingText from '../components/StreamingText'
-import TerminalWindow from '../components/TerminalWindow'
-import { ROUTES, getRoutePath } from '../services/routeService'
-import { isPositiveInteger, normalizeAnswer } from '../utils/answerUtils'
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import RetroButton from "../components/RetroButton";
+import StreamingText from "../components/StreamingText";
+import TerminalWindow from "../components/TerminalWindow";
+import { ROUTES, getRoutePath } from "../services/routeService";
+import { isPositiveInteger, normalizeAnswer } from "../utils/answerUtils";
 
 const challengeConfig = {
   language: {
-    label: 'Language',
-    intro: 'Language Assessment Initiated… Reorder the letters below to form a real word:\nT A E R S E',
-    feedback: ['Correct.', 'Language processing skills: strong.', 'Seasonal awareness: excellent.'],
-    isCorrect: (value) => normalizeAnswer(value) === 'easter'
+    label: "Language",
+    intro:
+      "Language Assessment Initiated… Reorder the letters below to form a real word:\nT A E R S E",
+    feedback: [
+      "Correct.",
+      "Language processing skills: strong.",
+      "Seasonal awareness: excellent.",
+    ],
+    isCorrect: (value) => normalizeAnswer(value) === "easter",
   },
   math: {
-    label: 'Math',
-    intro: 'Math Assessment Initiated… What number comes next in this pattern? 1, 1, 3, 3, 5, 8, __',
-    feedback: ['Correct.', 'Pattern recognition skills: impressive.', 'Mathematical reasoning: above average.'],
-    isCorrect: (value) => normalizeAnswer(value) === '13'
+    label: "Math",
+    intro:
+      "Math Assessment Initiated… What number comes next in this pattern? 1, 1, 2, 3, 5, 8, __",
+    feedback: [
+      "Correct.",
+      "Pattern recognition skills: impressive.",
+      "Mathematical reasoning: above average.",
+    ],
+    isCorrect: (value) => normalizeAnswer(value) === "13",
   },
   physical: {
-    label: 'Physical',
-    intro: 'Physical Assessment Initiated… Perform as many sit-ups as you can. Enter the total number completed.',
-    feedback: ['Physical effort detected.', 'Core strength: acceptable.', 'Bunny fitness standards: satisfied.'],
-    isCorrect: (value) => isPositiveInteger(value) && Number(value) > 10
-  }
-}
+    label: "Physical",
+    intro:
+      "Physical Assessment Initiated… Perform as many sit-ups as you can. Enter the total number completed.",
+    feedback: [
+      "Physical effort detected.",
+      "Core strength: acceptable.",
+      "Bunny fitness standards: satisfied.",
+    ],
+    isCorrect: (value) => isPositiveInteger(value) && Number(value) > 10,
+  },
+};
 
-const challengeOrder = ['language', 'math', 'physical']
+const challengeOrder = ["language", "math", "physical"];
 
 export default function AssessmentPage() {
-  const [activeChallenge, setActiveChallenge] = useState(null)
-  const [showMathHint, setShowMathHint] = useState(false)
-  const [answers, setAnswers] = useState({ language: '', math: '', physical: '' })
-  const [completed, setCompleted] = useState({ language: false, math: false, physical: false })
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const [activeChallenge, setActiveChallenge] = useState(null);
+  const [showMathHint, setShowMathHint] = useState(false);
+  const [answers, setAnswers] = useState({
+    language: "",
+    math: "",
+    physical: "",
+  });
+  const [completed, setCompleted] = useState({
+    language: false,
+    math: false,
+    physical: false,
+  });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const allComplete = useMemo(() => Object.values(completed).every(Boolean), [completed])
+  const allComplete = useMemo(
+    () => Object.values(completed).every(Boolean),
+    [completed],
+  );
 
   useEffect(() => {
     if (!allComplete) {
-      return
+      return;
     }
 
-    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
-  }, [allComplete])
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [allComplete]);
 
   const onChallengeSelect = (challengeKey) => {
-    setActiveChallenge(challengeKey)
-    setShowMathHint(false)
-    setError('')
-  }
+    setActiveChallenge(challengeKey);
+    setShowMathHint(false);
+    setError("");
+  };
 
   const onSubmit = () => {
     if (!activeChallenge) {
-      return
+      return;
     }
 
-    const challenge = challengeConfig[activeChallenge]
-    const answer = answers[activeChallenge]
+    const challenge = challengeConfig[activeChallenge];
+    const answer = answers[activeChallenge];
 
     if (!challenge.isCorrect(answer)) {
-      setError('Not quite. Try again.')
-      return
+      setError("Not quite. Try again.");
+      return;
     }
 
-    setCompleted((prev) => ({ ...prev, [activeChallenge]: true }))
-    setActiveChallenge(null)
-    setShowMathHint(false)
-    setError('')
-  }
+    setCompleted((prev) => ({ ...prev, [activeChallenge]: true }));
+    setActiveChallenge(null);
+    setShowMathHint(false);
+    setError("");
+  };
 
   return (
     <TerminalWindow>
@@ -83,7 +112,11 @@ export default function AssessmentPage() {
 
       <div className="mt-8 flex flex-col gap-3 md:flex-row">
         {challengeOrder.map((key) => (
-          <RetroButton key={key} onClick={() => onChallengeSelect(key)} disabled={completed[key]}>
+          <RetroButton
+            key={key}
+            onClick={() => onChallengeSelect(key)}
+            disabled={completed[key]}
+          >
             {challengeConfig[key].label}
           </RetroButton>
         ))}
@@ -91,18 +124,33 @@ export default function AssessmentPage() {
 
       {activeChallenge && (
         <div className="mt-8 space-y-4 rounded border border-lime-400/50 bg-slate-950/60 p-4">
-          <StreamingText text={challengeConfig[activeChallenge].intro} className="whitespace-pre-line text-lime-200" />
+          <StreamingText
+            text={challengeConfig[activeChallenge].intro}
+            className="whitespace-pre-line text-lime-200"
+          />
           <input
             value={answers[activeChallenge]}
-            onChange={(event) => setAnswers((prev) => ({ ...prev, [activeChallenge]: event.target.value }))}
+            onChange={(event) =>
+              setAnswers((prev) => ({
+                ...prev,
+                [activeChallenge]: event.target.value,
+              }))
+            }
             className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
             placeholder="Enter your answer"
           />
           <RetroButton onClick={onSubmit}>Submit</RetroButton>
-          {activeChallenge === 'math' && (
+          {activeChallenge === "math" && (
             <div className="space-y-2">
-              <RetroButton onClick={() => setShowMathHint(true)}>Request hint</RetroButton>
-              {showMathHint && <StreamingText text="Add the first two numbers to get the third." className="text-lime-300" />}
+              <RetroButton onClick={() => setShowMathHint(true)}>
+                Request hint
+              </RetroButton>
+              {showMathHint && (
+                <StreamingText
+                  text="Add the first two numbers to get the third."
+                  className="text-lime-300"
+                />
+              )}
             </div>
           )}
           {error && <StreamingText text={error} className="text-red-400" />}
@@ -113,7 +161,10 @@ export default function AssessmentPage() {
         {challengeOrder
           .filter((key) => completed[key])
           .map((key) => (
-            <div key={key} className="rounded border border-lime-700/70 bg-slate-900/70 p-4 text-lime-300">
+            <div
+              key={key}
+              className="rounded border border-lime-700/70 bg-slate-900/70 p-4 text-lime-300"
+            >
               {challengeConfig[key].feedback.map((line) => (
                 <StreamingText key={line} text={line} />
               ))}
@@ -129,10 +180,14 @@ export default function AssessmentPage() {
           <StreamingText text="Proceed to first clue. Initialize Bunny Hunt 2026." />
           <StreamingText text="You may now initialize Bunny Hunt 2026." />
           <div className="flex flex-col gap-3 md:flex-row">
-            <RetroButton onClick={() => navigate(getRoutePath(ROUTES.CLUE_ONE))}>Proceed to first clue</RetroButton>
+            <RetroButton
+              onClick={() => navigate(getRoutePath(ROUTES.CLUE_ONE))}
+            >
+              Proceed to first clue
+            </RetroButton>
           </div>
         </div>
       )}
     </TerminalWindow>
-  )
+  );
 }

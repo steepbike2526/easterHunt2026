@@ -1,10 +1,10 @@
 export const ROUTES = {
-  INTRO: 'init',
+  INTRO: 'ruready',
   ASSESSMENT: 'asmt',
   CLUE_ONE: 'clu1',
-  FRACTION_ASSESSMENT: 'frac',
-  ROCKET_PUZZLE: 'rckt',
-  FINAL_CHALLENGE: 'finl'
+  FRACTION_ASSESSMENT: 'frame',
+  ROCKET_PUZZLE: 'lego',
+  FINAL_CHALLENGE: 'bed'
 }
 
 export const getRoutePath = (id) => `/${id}`

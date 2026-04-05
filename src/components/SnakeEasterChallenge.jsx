@@ -1,266 +1,308 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const GRID_SIZE = 20
-const WIN_EGG_COUNT = 36
-const MIN_SWIPE_DISTANCE = 12
-const SPECIAL_EGG_NUMBER = 36
+const GRID_SIZE = 20;
+const WIN_EGG_COUNT = 36;
+const MIN_SWIPE_DISTANCE = 12;
+const SPECIAL_EGG_NUMBER = 36;
 
-const pastelColors = ['bg-pink-200', 'bg-purple-200', 'bg-yellow-200', 'bg-cyan-200', 'bg-emerald-200']
-const accentColors = ['bg-pink-500', 'bg-purple-500', 'bg-yellow-500', 'bg-cyan-500', 'bg-emerald-500']
-const patterns = ['dots', 'stripes', 'band']
+const pastelColors = [
+  "bg-pink-200",
+  "bg-purple-200",
+  "bg-yellow-200",
+  "bg-cyan-200",
+  "bg-emerald-200",
+];
+const accentColors = [
+  "bg-pink-500",
+  "bg-purple-500",
+  "bg-yellow-500",
+  "bg-cyan-500",
+  "bg-emerald-500",
+];
+const patterns = ["dots", "stripes", "band"];
 
 const createInitialSnake = () => [
   { x: 10, y: 10 },
   { x: 9, y: 10 },
-  { x: 8, y: 10 }
-]
+  { x: 8, y: 10 },
+];
 
 const randomEggStyle = () => ({
   shell: pastelColors[Math.floor(Math.random() * pastelColors.length)],
   accent: accentColors[Math.floor(Math.random() * accentColors.length)],
-  pattern: patterns[Math.floor(Math.random() * patterns.length)]
-})
+  pattern: patterns[Math.floor(Math.random() * patterns.length)],
+});
 
-const isOppositeDirection = (next, current) => next.x + current.x === 0 && next.y + current.y === 0
+const isOppositeDirection = (next, current) =>
+  next.x + current.x === 0 && next.y + current.y === 0;
 
 const speedForEggCount = (eggCount) => {
-  if (eggCount >= 30) return 90
-  if (eggCount >= 25) return 110
-  if (eggCount >= 20) return 120
-  if (eggCount >= 15) return 130
-  if (eggCount >= 10) return 140
-  if (eggCount >= 5) return 150
-  return 170
-}
+  if (eggCount >= 30) return 90;
+  if (eggCount >= 25) return 110;
+  if (eggCount >= 20) return 120;
+  if (eggCount >= 15) return 130;
+  if (eggCount >= 10) return 140;
+  if (eggCount >= 5) return 150;
+  return 170;
+};
 
 const snakeColorForEggCount = (eggCount, isBlinkPhase) => {
-  if (eggCount >= 30) return isBlinkPhase ? 'bg-rose-500' : 'bg-rose-700'
-  if (eggCount >= 25) return 'bg-rose-700'
-  if (eggCount >= 20) return 'bg-rose-500'
-  if (eggCount >= 15) return 'bg-amber-400'
-  if (eggCount >= 10) return 'bg-yellow-300'
-  if (eggCount >= 5) return 'bg-lime-400'
-  return 'bg-lime-300'
-}
+  if (eggCount >= 30) return isBlinkPhase ? "bg-rose-500" : "bg-rose-700";
+  if (eggCount >= 25) return "bg-rose-700";
+  if (eggCount >= 20) return "bg-rose-500";
+  if (eggCount >= 15) return "bg-amber-400";
+  if (eggCount >= 10) return "bg-yellow-300";
+  if (eggCount >= 5) return "bg-lime-400";
+  return "bg-lime-300";
+};
 
-const backgroundBeatForTick = (tickMs) => Math.max(80, Math.floor(tickMs * 1.5))
+const backgroundBeatForTick = (tickMs) =>
+  Math.max(80, Math.floor(tickMs * 1.5));
 
 const getEggCells = (food) => {
-  const size = food.size ?? 1
-  const cells = []
+  const size = food.size ?? 1;
+  const cells = [];
 
   for (let offsetY = 0; offsetY < size; offsetY += 1) {
     for (let offsetX = 0; offsetX < size; offsetX += 1) {
-      cells.push({ x: food.x + offsetX, y: food.y + offsetY })
+      cells.push({ x: food.x + offsetX, y: food.y + offsetY });
     }
   }
 
-  return cells
-}
+  return cells;
+};
 
 const getRandomFood = (snake, eggNumber, shouldAvoidWalls = false) => {
-  const isSpecialEgg = eggNumber === SPECIAL_EGG_NUMBER
-  const eggSize = isSpecialEgg ? 2 : 1
-  const minCoordinate = shouldAvoidWalls ? 1 : 0
-  const maxCoordinate = shouldAvoidWalls ? GRID_SIZE - eggSize - 1 : GRID_SIZE - eggSize
+  const isSpecialEgg = eggNumber === SPECIAL_EGG_NUMBER;
+  const eggSize = isSpecialEgg ? 2 : 1;
+  const minCoordinate = shouldAvoidWalls ? 1 : 0;
+  const maxCoordinate = shouldAvoidWalls
+    ? GRID_SIZE - eggSize - 1
+    : GRID_SIZE - eggSize;
 
   while (true) {
     const candidate = {
-      x: Math.floor(Math.random() * (maxCoordinate - minCoordinate + 1)) + minCoordinate,
-      y: Math.floor(Math.random() * (maxCoordinate - minCoordinate + 1)) + minCoordinate,
+      x:
+        Math.floor(Math.random() * (maxCoordinate - minCoordinate + 1)) +
+        minCoordinate,
+      y:
+        Math.floor(Math.random() * (maxCoordinate - minCoordinate + 1)) +
+        minCoordinate,
       size: eggSize,
-      isSpecial: isSpecialEgg
-    }
+      isSpecial: isSpecialEgg,
+    };
 
-    const candidateCells = getEggCells(candidate)
-    const isOnSnake = candidateCells.some((cell) => snake.some((segment) => segment.x === cell.x && segment.y === cell.y))
+    const candidateCells = getEggCells(candidate);
+    const isOnSnake = candidateCells.some((cell) =>
+      snake.some((segment) => segment.x === cell.x && segment.y === cell.y),
+    );
     if (!isOnSnake) {
-      return candidate
+      return candidate;
     }
   }
-}
+};
 
 const isTypingTarget = (target) => {
-  if (!(target instanceof HTMLElement)) return false
-  const tag = target.tagName.toLowerCase()
-  return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable
-}
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName.toLowerCase();
+  return (
+    tag === "input" ||
+    tag === "textarea" ||
+    tag === "select" ||
+    target.isContentEditable
+  );
+};
 
 const createAudioController = () => {
-  if (typeof window === 'undefined') return null
+  if (typeof window === "undefined") return null;
 
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext
-  if (!AudioContextClass) return null
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
 
-  const context = new AudioContextClass()
-  let isDisposed = false
-  let backgroundLoopHandle = null
-  let backgroundBeatMs = backgroundBeatForTick(speedForEggCount(0))
-  let backgroundStep = 0
-  const melody = [523.25, 659.25, 783.99, 659.25, 880, 783.99, 659.25, 523.25]
-  const bassline = [130.81, 146.83, 164.81, 146.83]
+  const context = new AudioContextClass();
+  let isDisposed = false;
+  let backgroundLoopHandle = null;
+  let backgroundBeatMs = backgroundBeatForTick(speedForEggCount(0));
+  let backgroundStep = 0;
+  const melody = [523.25, 659.25, 783.99, 659.25, 880, 783.99, 659.25, 523.25];
+  const bassline = [130.81, 146.83, 164.81, 146.83];
 
-  const playTone = (frequency, duration, startAt, type = 'sine', gainValue = 0.06) => {
-    if (isDisposed || context.state === 'closed') return
+  const playTone = (
+    frequency,
+    duration,
+    startAt,
+    type = "sine",
+    gainValue = 0.06,
+  ) => {
+    if (isDisposed || context.state === "closed") return;
 
-    const oscillator = context.createOscillator()
-    const gainNode = context.createGain()
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
 
-    oscillator.type = type
-    oscillator.frequency.setValueAtTime(frequency, startAt)
-    gainNode.gain.setValueAtTime(0.0001, startAt)
-    gainNode.gain.exponentialRampToValueAtTime(gainValue, startAt + 0.015)
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, startAt);
+    gainNode.gain.setValueAtTime(0.0001, startAt);
+    gainNode.gain.exponentialRampToValueAtTime(gainValue, startAt + 0.015);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
 
-    oscillator.connect(gainNode)
-    gainNode.connect(context.destination)
-    oscillator.start(startAt)
-    oscillator.stop(startAt + duration)
-  }
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    oscillator.start(startAt);
+    oscillator.stop(startAt + duration);
+  };
 
   const playCheerBurst = (startAt, duration = 0.2, gainValue = 0.02) => {
-    if (isDisposed || context.state === 'closed') return
+    if (isDisposed || context.state === "closed") return;
 
-    const bufferSize = Math.max(1, Math.floor(context.sampleRate * duration))
-    const noiseBuffer = context.createBuffer(1, bufferSize, context.sampleRate)
-    const data = noiseBuffer.getChannelData(0)
+    const bufferSize = Math.max(1, Math.floor(context.sampleRate * duration));
+    const noiseBuffer = context.createBuffer(1, bufferSize, context.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i += 1) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize)
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
     }
 
-    const noiseSource = context.createBufferSource()
-    noiseSource.buffer = noiseBuffer
+    const noiseSource = context.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
 
-    const filterNode = context.createBiquadFilter()
-    filterNode.type = 'bandpass'
-    filterNode.frequency.setValueAtTime(1800, startAt)
-    filterNode.Q.setValueAtTime(1.1, startAt)
+    const filterNode = context.createBiquadFilter();
+    filterNode.type = "bandpass";
+    filterNode.frequency.setValueAtTime(1800, startAt);
+    filterNode.Q.setValueAtTime(1.1, startAt);
 
-    const gainNode = context.createGain()
-    gainNode.gain.setValueAtTime(0.0001, startAt)
-    gainNode.gain.exponentialRampToValueAtTime(gainValue, startAt + 0.015)
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
+    const gainNode = context.createGain();
+    gainNode.gain.setValueAtTime(0.0001, startAt);
+    gainNode.gain.exponentialRampToValueAtTime(gainValue, startAt + 0.015);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
 
-    noiseSource.connect(filterNode)
-    filterNode.connect(gainNode)
-    gainNode.connect(context.destination)
-    noiseSource.start(startAt)
-    noiseSource.stop(startAt + duration)
-  }
+    noiseSource.connect(filterNode);
+    filterNode.connect(gainNode);
+    gainNode.connect(context.destination);
+    noiseSource.start(startAt);
+    noiseSource.stop(startAt + duration);
+  };
 
   const ensureContextRunning = async () => {
-    if (isDisposed || context.state === 'closed') return false
-    if (context.state === 'suspended' || context.state === 'interrupted') {
-      await context.resume()
+    if (isDisposed || context.state === "closed") return false;
+    if (context.state === "suspended" || context.state === "interrupted") {
+      await context.resume();
     }
-    return context.state === 'running'
-  }
+    return context.state === "running";
+  };
 
   const playWhenReady = async (playback) => {
-    const canPlay = await ensureContextRunning()
-    if (!canPlay) return
-    playback(context.currentTime + 0.01)
-  }
+    const canPlay = await ensureContextRunning();
+    if (!canPlay) return;
+    playback(context.currentTime + 0.01);
+  };
 
   const playBackgroundStep = () => {
-    if (isDisposed || context.state !== 'running') return
+    if (isDisposed || context.state !== "running") return;
 
-    const startAt = context.currentTime + 0.01
-    const melodyFrequency = melody[backgroundStep % melody.length]
-    playTone(melodyFrequency, 0.1, startAt, 'square', 0.018)
+    const startAt = context.currentTime + 0.01;
+    const melodyFrequency = melody[backgroundStep % melody.length];
+    playTone(melodyFrequency, 0.1, startAt, "square", 0.018);
 
     if (backgroundStep % 2 === 0) {
-      const bassFrequency = bassline[Math.floor(backgroundStep / 2) % bassline.length]
-      playTone(bassFrequency, 0.18, startAt, 'triangle', 0.014)
+      const bassFrequency =
+        bassline[Math.floor(backgroundStep / 2) % bassline.length];
+      playTone(bassFrequency, 0.18, startAt, "triangle", 0.014);
     }
 
-    backgroundStep += 1
-  }
+    backgroundStep += 1;
+  };
 
   const stopBackgroundLoop = () => {
     if (backgroundLoopHandle !== null) {
-      window.clearInterval(backgroundLoopHandle)
-      backgroundLoopHandle = null
+      window.clearInterval(backgroundLoopHandle);
+      backgroundLoopHandle = null;
     }
-  }
+  };
 
   const startBackgroundLoop = () => {
-    if (isDisposed || context.state !== 'running' || backgroundLoopHandle !== null) return
-    playBackgroundStep()
-    backgroundLoopHandle = window.setInterval(playBackgroundStep, backgroundBeatMs)
-  }
+    if (
+      isDisposed ||
+      context.state !== "running" ||
+      backgroundLoopHandle !== null
+    )
+      return;
+    playBackgroundStep();
+    backgroundLoopHandle = window.setInterval(
+      playBackgroundStep,
+      backgroundBeatMs,
+    );
+  };
 
   const restartBackgroundLoop = () => {
-    stopBackgroundLoop()
-    startBackgroundLoop()
-  }
+    stopBackgroundLoop();
+    startBackgroundLoop();
+  };
 
   return {
     resume: async () => ensureContextRunning(),
     startBackgroundLoop: () => {
       void ensureContextRunning().then((canPlay) => {
-        if (!canPlay) return
-        startBackgroundLoop()
-      })
+        if (!canPlay) return;
+        startBackgroundLoop();
+      });
     },
     stopBackgroundLoop: () => {
-      stopBackgroundLoop()
+      stopBackgroundLoop();
     },
     setBackgroundBeatMs: (nextBeatMs) => {
-      if (backgroundBeatMs === nextBeatMs) return
-      backgroundBeatMs = nextBeatMs
+      if (backgroundBeatMs === nextBeatMs) return;
+      backgroundBeatMs = nextBeatMs;
       if (backgroundLoopHandle !== null) {
-        restartBackgroundLoop()
+        restartBackgroundLoop();
       }
     },
     playEggSound: () => {
       void playWhenReady((startAt) => {
-        playTone(660, 0.09, startAt, 'triangle', 0.045)
-        playTone(880, 0.12, startAt + 0.045, 'triangle', 0.04)
-      })
+        playTone(660, 0.09, startAt, "triangle", 0.045);
+        playTone(880, 0.12, startAt + 0.045, "triangle", 0.04);
+      });
     },
     playWinSound: () => {
       void playWhenReady((startAt) => {
-        const fanfareNotes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98]
+        const fanfareNotes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98];
         fanfareNotes.forEach((note, index) => {
-          const noteStart = startAt + index * 0.11
-          playTone(note, 0.24, noteStart, 'triangle', 0.055)
-          playTone(note * 2, 0.16, noteStart + 0.03, 'sine', 0.025)
-        })
+          const noteStart = startAt + index * 0.11;
+          playTone(note, 0.24, noteStart, "triangle", 0.055);
+          playTone(note * 2, 0.16, noteStart + 0.03, "sine", 0.025);
+        });
 
-        playTone(261.63, 0.5, startAt, 'sine', 0.03)
-        playTone(392, 0.32, startAt + 0.05, 'triangle', 0.05)
-        playTone(523.25, 0.32, startAt + 0.18, 'triangle', 0.055)
-        playTone(659.25, 0.4, startAt + 0.34, 'triangle', 0.06)
-        playTone(783.99, 0.45, startAt + 0.54, 'sine', 0.065)
-        playTone(1046.5, 0.65, startAt + 0.78, 'sine', 0.07)
-        playTone(1318.51, 0.65, startAt + 0.78, 'triangle', 0.05)
-        playTone(1567.98, 0.7, startAt + 1.04, 'triangle', 0.05)
+        playTone(261.63, 0.5, startAt, "sine", 0.03);
+        playTone(392, 0.32, startAt + 0.05, "triangle", 0.05);
+        playTone(523.25, 0.32, startAt + 0.18, "triangle", 0.055);
+        playTone(659.25, 0.4, startAt + 0.34, "triangle", 0.06);
+        playTone(783.99, 0.45, startAt + 0.54, "sine", 0.065);
+        playTone(1046.5, 0.65, startAt + 0.78, "sine", 0.07);
+        playTone(1318.51, 0.65, startAt + 0.78, "triangle", 0.05);
+        playTone(1567.98, 0.7, startAt + 1.04, "triangle", 0.05);
 
-        playCheerBurst(startAt + 0.12, 0.2, 0.016)
-        playCheerBurst(startAt + 0.36, 0.24, 0.018)
-        playCheerBurst(startAt + 0.62, 0.28, 0.02)
-        playCheerBurst(startAt + 0.95, 0.32, 0.022)
-      })
+        playCheerBurst(startAt + 0.12, 0.2, 0.016);
+        playCheerBurst(startAt + 0.36, 0.24, 0.018);
+        playCheerBurst(startAt + 0.62, 0.28, 0.02);
+        playCheerBurst(startAt + 0.95, 0.32, 0.022);
+      });
     },
     playCrashSound: () => {
       void playWhenReady((startAt) => {
-        playTone(220, 0.12, startAt, 'square', 0.055)
-        playTone(160, 0.16, startAt + 0.08, 'sawtooth', 0.05)
-        playTone(110, 0.22, startAt + 0.18, 'sawtooth', 0.055)
-        playTone(82.41, 0.28, startAt + 0.28, 'triangle', 0.05)
-      })
+        playTone(220, 0.12, startAt, "square", 0.055);
+        playTone(160, 0.16, startAt + 0.08, "sawtooth", 0.05);
+        playTone(110, 0.22, startAt + 0.18, "sawtooth", 0.055);
+        playTone(82.41, 0.28, startAt + 0.28, "triangle", 0.05);
+      });
     },
     dispose: () => {
-      isDisposed = true
-      stopBackgroundLoop()
-      void context.close()
-    }
-  }
-}
+      isDisposed = true;
+      stopBackgroundLoop();
+      void context.close();
+    },
+  };
+};
 
 const createInitialGameState = (crashCount = 0) => {
-  const initialSnake = createInitialSnake()
+  const initialSnake = createInitialSnake();
   return {
     snake: initialSnake,
     direction: { x: 1, y: 0 },
@@ -268,145 +310,200 @@ const createInitialGameState = (crashCount = 0) => {
     food: getRandomFood(initialSnake, 1, crashCount >= 3),
     eggStyle: randomEggStyle(),
     collectedEggs: [],
-    eggsEaten: 0,
+    eggsEaten: 35,
     hasStarted: false,
     isWon: false,
-    crashCount
-  }
-}
+    crashCount,
+  };
+};
 
-function EggSprite({ style, isSpecial, className = '' }) {
+function EggSprite({ style, isSpecial, className = "" }) {
   if (isSpecial) {
     return (
-      <div className={`relative animate-pulse rounded-[999px] border border-yellow-200 bg-yellow-400 shadow-[0_0_18px_4px_rgba(250,204,21,0.8)] ${className}`}>
+      <div
+        className={`relative animate-pulse rounded-[999px] border border-yellow-200 bg-yellow-400 shadow-[0_0_18px_4px_rgba(250,204,21,0.8)] ${className}`}
+      >
         <span className="absolute left-[36%] top-[28%] h-[8%] w-[8%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-100" />
         <span className="absolute left-[66%] top-[38%] h-[8%] w-[8%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-200" />
         <span className="absolute left-1/2 top-[62%] h-[4%] w-[24%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-100" />
       </div>
-    )
+    );
   }
 
   return (
     <div className={`relative rounded-[999px] ${style.shell} ${className}`}>
-      {style.pattern === 'dots' && (
+      {style.pattern === "dots" && (
         <>
-          <span className={`absolute left-[34%] top-[34%] h-[12%] w-[12%] -translate-x-1/2 -translate-y-1/2 rounded-full ${style.accent}`} />
-          <span className={`absolute left-[66%] top-[54%] h-[12%] w-[12%] -translate-x-1/2 -translate-y-1/2 rounded-full ${style.accent}`} />
+          <span
+            className={`absolute left-[34%] top-[34%] h-[12%] w-[12%] -translate-x-1/2 -translate-y-1/2 rounded-full ${style.accent}`}
+          />
+          <span
+            className={`absolute left-[66%] top-[54%] h-[12%] w-[12%] -translate-x-1/2 -translate-y-1/2 rounded-full ${style.accent}`}
+          />
         </>
       )}
-      {style.pattern === 'stripes' && (
+      {style.pattern === "stripes" && (
         <>
-          <span className={`absolute left-0 top-[38%] h-[8%] w-full -translate-y-1/2 ${style.accent}`} />
-          <span className={`absolute left-0 top-[60%] h-[8%] w-full -translate-y-1/2 ${style.accent}`} />
+          <span
+            className={`absolute left-0 top-[38%] h-[8%] w-full -translate-y-1/2 ${style.accent}`}
+          />
+          <span
+            className={`absolute left-0 top-[60%] h-[8%] w-full -translate-y-1/2 ${style.accent}`}
+          />
         </>
       )}
-      {style.pattern === 'band' && <span className={`absolute left-1/2 top-0 h-full w-[16%] -translate-x-1/2 rounded-full ${style.accent}`} />}
+      {style.pattern === "band" && (
+        <span
+          className={`absolute left-1/2 top-0 h-full w-[16%] -translate-x-1/2 rounded-full ${style.accent}`}
+        />
+      )}
     </div>
-  )
+  );
 }
 
 function Basket({ collectedEggs, isExpandedView = false }) {
   return (
-    <aside className={`w-full rounded border border-amber-400/40 bg-amber-950/30 p-3 ${isExpandedView ? 'max-w-[280px]' : 'max-w-[240px]'}`}>
+    <aside
+      className={`w-full rounded border border-amber-400/40 bg-amber-950/30 p-3 ${isExpandedView ? "max-w-[280px]" : "max-w-[240px]"}`}
+    >
       <p className="mb-2 text-sm font-semibold text-amber-100">
-        Basket: <span className="font-bold">{collectedEggs.length}</span> / {SPECIAL_EGG_NUMBER}
+        Basket: <span className="font-bold">{collectedEggs.length}</span> /{" "}
+        {SPECIAL_EGG_NUMBER}
       </p>
       <div className="rounded border border-amber-600/60 bg-gradient-to-b from-amber-800/80 to-amber-900/90 p-2">
         <div className="grid max-h-[420px] grid-cols-6 content-start gap-1 overflow-hidden rounded bg-amber-950/40 p-1">
           {collectedEggs.map((egg, index) => (
-            <div key={`basket-egg-${index}`} className="flex aspect-square items-center justify-center">
+            <div
+              key={`basket-egg-${index}`}
+              className="flex aspect-square items-center justify-center"
+            >
               <EggSprite
                 style={egg.style}
                 isSpecial={egg.isSpecial}
-                className={`${egg.size > 1 ? 'h-[90%] w-[90%]' : 'h-[72%] w-[56%]'}`}
+                className={`${egg.size > 1 ? "h-[90%] w-[90%]" : "h-[72%] w-[56%]"}`}
               />
             </div>
           ))}
-          {Array.from({ length: Math.max(0, SPECIAL_EGG_NUMBER - collectedEggs.length) }).map((_, index) => (
-            <div key={`basket-slot-${index}`} className="aspect-square rounded border border-amber-700/40 bg-amber-950/20" />
+          {Array.from({
+            length: Math.max(0, SPECIAL_EGG_NUMBER - collectedEggs.length),
+          }).map((_, index) => (
+            <div
+              key={`basket-slot-${index}`}
+              className="aspect-square rounded border border-amber-700/40 bg-amber-950/20"
+            />
           ))}
         </div>
       </div>
     </aside>
-  )
+  );
 }
 
 export default function SnakeEasterChallenge({ onWin }) {
-  const [gameState, setGameState] = useState(createInitialGameState)
-  const [touchStart, setTouchStart] = useState(null)
-  const [isBlinkPhase, setIsBlinkPhase] = useState(false)
-  const [isExpandedView, setIsExpandedView] = useState(false)
-  const audioControllerRef = useRef(null)
-  const previousEggCountRef = useRef(0)
-  const previousWonRef = useRef(false)
-  const previousCrashCountRef = useRef(0)
-  const expandedContainerRef = useRef(null)
+  const [gameState, setGameState] = useState(createInitialGameState);
+  const [touchStart, setTouchStart] = useState(null);
+  const [isBlinkPhase, setIsBlinkPhase] = useState(false);
+  const [isExpandedView, setIsExpandedView] = useState(false);
+  const audioControllerRef = useRef(null);
+  const previousEggCountRef = useRef(0);
+  const previousWonRef = useRef(false);
+  const previousCrashCountRef = useRef(0);
+  const expandedContainerRef = useRef(null);
 
-  const { snake, food, eggStyle, collectedEggs, eggsEaten, hasStarted, isWon, crashCount } = gameState
+  const {
+    snake,
+    food,
+    eggStyle,
+    collectedEggs,
+    eggsEaten,
+    hasStarted,
+    isWon,
+    crashCount,
+  } = gameState;
 
-  const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten])
-  const snakeColorClass = useMemo(() => snakeColorForEggCount(eggsEaten, isBlinkPhase), [eggsEaten, isBlinkPhase])
-  const foodCells = useMemo(() => getEggCells(food), [food])
+  const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten]);
+  const snakeColorClass = useMemo(
+    () => snakeColorForEggCount(eggsEaten, isBlinkPhase),
+    [eggsEaten, isBlinkPhase],
+  );
+  const foodCells = useMemo(() => getEggCells(food), [food]);
 
   const ensureAudioReady = useCallback(() => {
     if (!audioControllerRef.current) {
-      audioControllerRef.current = createAudioController()
+      audioControllerRef.current = createAudioController();
     }
-    audioControllerRef.current?.resume()
-  }, [])
+    audioControllerRef.current?.resume();
+  }, []);
 
   const resetGame = useCallback(() => {
-    setGameState(createInitialGameState())
-  }, [])
+    setGameState(createInitialGameState());
+  }, []);
 
   const changeDirection = useCallback((nextDirection, options = {}) => {
-    const { startIfStopped = false } = options
+    const { startIfStopped = false } = options;
 
     setGameState((prev) => {
-      if (prev.isWon) return prev
+      if (prev.isWon) return prev;
 
-      const nextPendingDirection = isOppositeDirection(nextDirection, prev.direction)
+      const nextPendingDirection = isOppositeDirection(
+        nextDirection,
+        prev.direction,
+      )
         ? prev.pendingDirection
-        : nextDirection
+        : nextDirection;
 
       return {
         ...prev,
         pendingDirection: nextPendingDirection,
-        hasStarted: startIfStopped ? true : prev.hasStarted
-      }
-    })
-  }, [])
+        hasStarted: startIfStopped ? true : prev.hasStarted,
+      };
+    });
+  }, []);
 
   useEffect(() => {
     if (!hasStarted || isWon) {
-      return undefined
+      return undefined;
     }
 
     const timer = setInterval(() => {
       setGameState((prev) => {
-        const head = prev.snake[0]
-        const nextHead = { x: head.x + prev.pendingDirection.x, y: head.y + prev.pendingDirection.y }
-        const foodCells = getEggCells(prev.food)
-        const ateEgg = foodCells.some((cell) => nextHead.x === cell.x && nextHead.y === cell.y)
+        const head = prev.snake[0];
+        const nextHead = {
+          x: head.x + prev.pendingDirection.x,
+          y: head.y + prev.pendingDirection.y,
+        };
+        const foodCells = getEggCells(prev.food);
+        const ateEgg = foodCells.some(
+          (cell) => nextHead.x === cell.x && nextHead.y === cell.y,
+        );
 
-        const hitWall = nextHead.x < 0 || nextHead.x >= GRID_SIZE || nextHead.y < 0 || nextHead.y >= GRID_SIZE
-        const occupiedSegments = ateEgg ? prev.snake : prev.snake.slice(0, -1)
-        const hitSelf = occupiedSegments.some((segment) => segment.x === nextHead.x && segment.y === nextHead.y)
+        const hitWall =
+          nextHead.x < 0 ||
+          nextHead.x >= GRID_SIZE ||
+          nextHead.y < 0 ||
+          nextHead.y >= GRID_SIZE;
+        const occupiedSegments = ateEgg ? prev.snake : prev.snake.slice(0, -1);
+        const hitSelf = occupiedSegments.some(
+          (segment) => segment.x === nextHead.x && segment.y === nextHead.y,
+        );
 
         if (hitWall || hitSelf) {
-          const nextCrashCount = prev.crashCount + 1
-          return createInitialGameState(nextCrashCount)
+          const nextCrashCount = prev.crashCount + 1;
+          return createInitialGameState(nextCrashCount);
         }
 
-        const nextSnake = [nextHead, ...prev.snake]
+        const nextSnake = [nextHead, ...prev.snake];
 
         if (!ateEgg) {
-          nextSnake.pop()
-          return { ...prev, snake: nextSnake, direction: prev.pendingDirection }
+          nextSnake.pop();
+          return {
+            ...prev,
+            snake: nextSnake,
+            direction: prev.pendingDirection,
+          };
         }
 
-        const newEggCount = prev.eggsEaten + 1
-        const didWin = newEggCount >= WIN_EGG_COUNT
+        const newEggCount = prev.eggsEaten + 1;
+        const didWin = newEggCount >= WIN_EGG_COUNT;
 
         return {
           ...prev,
@@ -419,161 +516,177 @@ export default function SnakeEasterChallenge({ onWin }) {
             {
               style: prev.eggStyle,
               isSpecial: prev.food.isSpecial,
-              size: prev.food.size ?? 1
-            }
+              size: prev.food.size ?? 1,
+            },
           ],
           eggsEaten: newEggCount,
           hasStarted: didWin ? false : prev.hasStarted,
-          isWon: didWin
-        }
-      })
-    }, tickMs)
+          isWon: didWin,
+        };
+      });
+    }, tickMs);
 
-    return () => clearInterval(timer)
-  }, [hasStarted, isWon, tickMs])
-
-  useEffect(() => {
-    if (!isWon) return
-    onWin?.()
-  }, [isWon, onWin])
-
-  useEffect(() => () => {
-    audioControllerRef.current?.dispose()
-    audioControllerRef.current = null
-  }, [])
+    return () => clearInterval(timer);
+  }, [hasStarted, isWon, tickMs]);
 
   useEffect(() => {
-    if (!audioControllerRef.current) return
+    if (!isWon) return;
+    onWin?.();
+  }, [isWon, onWin]);
 
-    const backgroundBeatMs = backgroundBeatForTick(tickMs)
-    audioControllerRef.current.setBackgroundBeatMs(backgroundBeatMs)
+  useEffect(
+    () => () => {
+      audioControllerRef.current?.dispose();
+      audioControllerRef.current = null;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!audioControllerRef.current) return;
+
+    const backgroundBeatMs = backgroundBeatForTick(tickMs);
+    audioControllerRef.current.setBackgroundBeatMs(backgroundBeatMs);
 
     if (hasStarted && !isWon) {
-      audioControllerRef.current.startBackgroundLoop()
-      return
+      audioControllerRef.current.startBackgroundLoop();
+      return;
     }
 
-    audioControllerRef.current.stopBackgroundLoop()
-  }, [hasStarted, isWon, tickMs])
+    audioControllerRef.current.stopBackgroundLoop();
+  }, [hasStarted, isWon, tickMs]);
 
   useEffect(() => {
     if (eggsEaten < 30) {
-      setIsBlinkPhase(false)
-      return undefined
+      setIsBlinkPhase(false);
+      return undefined;
     }
 
     const blinkInterval = window.setInterval(() => {
-      setIsBlinkPhase((prev) => !prev)
-    }, 220)
+      setIsBlinkPhase((prev) => !prev);
+    }, 220);
 
-    return () => window.clearInterval(blinkInterval)
-  }, [eggsEaten])
+    return () => window.clearInterval(blinkInterval);
+  }, [eggsEaten]);
 
   useEffect(() => {
     if (eggsEaten > previousEggCountRef.current) {
-      audioControllerRef.current?.playEggSound()
+      audioControllerRef.current?.playEggSound();
     }
 
     if (!previousWonRef.current && isWon) {
-      audioControllerRef.current?.playWinSound()
+      audioControllerRef.current?.playWinSound();
     }
 
     if (crashCount > previousCrashCountRef.current) {
-      audioControllerRef.current?.playCrashSound()
+      audioControllerRef.current?.playCrashSound();
     }
 
-    previousEggCountRef.current = eggsEaten
-    previousWonRef.current = isWon
-    previousCrashCountRef.current = crashCount
-  }, [crashCount, eggsEaten, isWon])
+    previousEggCountRef.current = eggsEaten;
+    previousWonRef.current = isWon;
+    previousCrashCountRef.current = crashCount;
+  }, [crashCount, eggsEaten, isWon]);
 
   const onTouchStart = (event) => {
-    ensureAudioReady()
-    const touch = event.touches[0]
-    setTouchStart({ x: touch.clientX, y: touch.clientY })
-  }
+    ensureAudioReady();
+    const touch = event.touches[0];
+    setTouchStart({ x: touch.clientX, y: touch.clientY });
+  };
 
   const onTouchEnd = (event) => {
-    if (!touchStart) return
-    const touch = event.changedTouches[0]
-    const deltaX = touch.clientX - touchStart.x
-    const deltaY = touch.clientY - touchStart.y
-    setTouchStart(null)
+    if (!touchStart) return;
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+    setTouchStart(null);
 
-    if (Math.abs(deltaX) < MIN_SWIPE_DISTANCE && Math.abs(deltaY) < MIN_SWIPE_DISTANCE) {
-      return
+    if (
+      Math.abs(deltaX) < MIN_SWIPE_DISTANCE &&
+      Math.abs(deltaY) < MIN_SWIPE_DISTANCE
+    ) {
+      return;
     }
 
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      changeDirection(deltaX > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 }, { startIfStopped: true })
+      changeDirection(deltaX > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 }, {
+        startIfStopped: true,
+      });
     } else {
-      changeDirection(deltaY > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 }, { startIfStopped: true })
+      changeDirection(deltaY > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 }, {
+        startIfStopped: true,
+      });
     }
-  }
+  };
 
   useEffect(() => {
     const directionByKey = {
       ArrowUp: { x: 0, y: -1 },
       ArrowDown: { x: 0, y: 1 },
       ArrowLeft: { x: -1, y: 0 },
-      ArrowRight: { x: 1, y: 0 }
-    }
+      ArrowRight: { x: 1, y: 0 },
+    };
 
     const onKeyDown = (event) => {
-      if (event.key === 'Escape' && isExpandedView) {
-        event.preventDefault()
-        setIsExpandedView(false)
-        return
+      if (event.key === "Escape" && isExpandedView) {
+        event.preventDefault();
+        setIsExpandedView(false);
+        return;
       }
 
-      const nextDirection = directionByKey[event.key]
-      if (!nextDirection) return
-      if (isTypingTarget(event.target)) return
+      const nextDirection = directionByKey[event.key];
+      if (!nextDirection) return;
+      if (isTypingTarget(event.target)) return;
 
-      event.preventDefault()
-      ensureAudioReady()
-      changeDirection(nextDirection, { startIfStopped: true })
-    }
+      event.preventDefault();
+      ensureAudioReady();
+      changeDirection(nextDirection, { startIfStopped: true });
+    };
 
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [changeDirection, ensureAudioReady, isExpandedView])
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [changeDirection, ensureAudioReady, isExpandedView]);
 
   useEffect(() => {
-    if (!isExpandedView) return undefined
+    if (!isExpandedView) return undefined;
 
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow = previousOverflow
-    }
-  }, [isExpandedView])
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isExpandedView]);
 
   useEffect(() => {
-    const containerElement = expandedContainerRef.current
-    if (!isExpandedView || !containerElement) return undefined
+    const containerElement = expandedContainerRef.current;
+    if (!isExpandedView || !containerElement) return undefined;
 
     const preventTouchDefault = (event) => {
-      event.preventDefault()
-    }
+      event.preventDefault();
+    };
 
-    containerElement.addEventListener('touchmove', preventTouchDefault, { passive: false })
+    containerElement.addEventListener("touchmove", preventTouchDefault, {
+      passive: false,
+    });
 
     return () => {
-      containerElement.removeEventListener('touchmove', preventTouchDefault)
-    }
-  }, [isExpandedView])
+      containerElement.removeEventListener("touchmove", preventTouchDefault);
+    };
+  }, [isExpandedView]);
 
   return (
     <div
       ref={expandedContainerRef}
       className={`space-y-4 rounded border border-lime-400/40 bg-slate-950/70 p-4 select-none ${
-        isExpandedView ? 'fixed inset-0 z-50 overflow-hidden bg-slate-950 px-4 py-6 md:px-6' : 'mt-6'
+        isExpandedView
+          ? "fixed inset-0 z-50 overflow-hidden bg-slate-950 px-4 py-6 md:px-6"
+          : "mt-6"
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-lime-100 md:text-base">
-        <p>Eggs: <span className="font-bold">{eggsEaten}</span> / {WIN_EGG_COUNT}</p>
+        <p>
+          Eggs: <span className="font-bold">{eggsEaten}</span> / {WIN_EGG_COUNT}
+        </p>
         {isExpandedView && (
           <button
             type="button"
@@ -586,44 +699,67 @@ export default function SnakeEasterChallenge({ onWin }) {
         )}
       </div>
 
-      <div className={`flex items-start gap-4 ${isExpandedView ? 'flex-wrap justify-center lg:flex-nowrap' : 'flex-wrap md:flex-nowrap'}`}>
+      <div
+        className={`flex items-start gap-4 ${isExpandedView ? "flex-wrap justify-center lg:flex-nowrap" : "flex-wrap md:flex-nowrap"}`}
+      >
         <div className="relative w-full">
           <div
             className={`mx-auto grid touch-none rounded border border-lime-400/40 bg-black ${
-              isExpandedView ? 'w-[min(96vw,82vh)] max-w-none' : 'w-full max-w-[420px]'
+              isExpandedView
+                ? "w-[min(96vw,82vh)] max-w-none"
+                : "w-full max-w-[420px]"
             }`}
-            style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
+            style={{
+              gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+            }}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
           >
             {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, index) => {
-              const x = index % GRID_SIZE
-              const y = Math.floor(index / GRID_SIZE)
-              const isSnake = snake.some((segment) => segment.x === x && segment.y === y)
-              const isFood = foodCells.some((cell) => cell.x === x && cell.y === y)
-              const isFoodOrigin = food.x === x && food.y === y
+              const x = index % GRID_SIZE;
+              const y = Math.floor(index / GRID_SIZE);
+              const isSnake = snake.some(
+                (segment) => segment.x === x && segment.y === y,
+              );
+              const isFood = foodCells.some(
+                (cell) => cell.x === x && cell.y === y,
+              );
+              const isFoodOrigin = food.x === x && food.y === y;
 
               return (
-                <div key={`${x}-${y}`} className="relative flex aspect-square items-center justify-center border border-lime-950/20">
-                  {isSnake && <div className={`h-[70%] w-[70%] rounded-sm ${snakeColorClass}`} />}
-                  {isFood && !food.isSpecial && <EggSprite style={eggStyle} className="h-[76%] w-[58%]" />}
-                  {isFood && food.isSpecial && (
-                    isFoodOrigin
-                      ? (
-                        <div className="pointer-events-none absolute inset-0 z-10 h-[200%] w-[200%]">
-                          <EggSprite style={eggStyle} isSpecial className="h-full w-full" />
-                        </div>
-                      )
-                      : null
+                <div
+                  key={`${x}-${y}`}
+                  className="relative flex aspect-square items-center justify-center border border-lime-950/20"
+                >
+                  {isSnake && (
+                    <div
+                      className={`h-[70%] w-[70%] rounded-sm ${snakeColorClass}`}
+                    />
                   )}
+                  {isFood && !food.isSpecial && (
+                    <EggSprite style={eggStyle} className="h-[76%] w-[58%]" />
+                  )}
+                  {isFood &&
+                    food.isSpecial &&
+                    (isFoodOrigin ? (
+                      <div className="pointer-events-none absolute inset-0 z-10 h-[200%] w-[200%]">
+                        <EggSprite
+                          style={eggStyle}
+                          isSpecial
+                          className="h-full w-full"
+                        />
+                      </div>
+                    ) : null)}
                 </div>
-              )
+              );
             })}
           </div>
 
           {isWon && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-              <p className="text-center text-3xl font-black tracking-widest text-yellow-200 md:text-5xl">YOU WON!!!</p>
+              <p className="text-center text-3xl font-black tracking-widest text-yellow-200 md:text-5xl">
+                YOU WON!!!
+              </p>
             </div>
           )}
         </div>
@@ -637,27 +773,39 @@ export default function SnakeEasterChallenge({ onWin }) {
             <button
               type="button"
               onClick={() => {
-                ensureAudioReady()
-                setGameState((prev) => ({ ...prev, hasStarted: !prev.hasStarted }))
+                ensureAudioReady();
+                setGameState((prev) => ({
+                  ...prev,
+                  hasStarted: !prev.hasStarted,
+                }));
               }}
               className="rounded border border-lime-300 bg-lime-900/40 px-3 py-2 font-semibold"
             >
-              {hasStarted ? 'Pause' : 'Start'}
+              {hasStarted ? "Pause" : "Start"}
             </button>
-            <button type="button" onClick={resetGame} className="rounded border border-yellow-400 px-3 py-2 text-yellow-200">Reset</button>
             <button
               type="button"
-              onClick={() => setIsExpandedView((previousValue) => !previousValue)}
+              onClick={resetGame}
+              className="rounded border border-yellow-400 px-3 py-2 text-yellow-200"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setIsExpandedView((previousValue) => !previousValue)
+              }
               className="col-span-2 rounded border border-cyan-300 px-3 py-2 text-cyan-200"
             >
               Full Screen View
             </button>
           </div>
           <p className="text-xs text-lime-200/80">
-            Use your keyboard arrow keys or swipe the board with one finger to steer the snake.
+            Use your keyboard arrow keys or swipe the board with one finger to
+            steer the snake.
           </p>
         </>
       )}
     </div>
-  )
+  );
 }
