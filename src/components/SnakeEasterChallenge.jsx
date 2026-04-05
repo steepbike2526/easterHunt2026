@@ -37,13 +37,13 @@ const isOppositeDirection = (next, current) =>
   next.x + current.x === 0 && next.y + current.y === 0;
 
 const speedForEggCount = (eggCount) => {
-  if (eggCount >= 30) return 90+crashCount;
-  if (eggCount >= 25) return 110+crashCount;
-  if (eggCount >= 20) return 120+crashCount;
-  if (eggCount >= 15) return 130+crashCount;
-  if (eggCount >= 10) return 140+crashCount;
-  if (eggCount >= 5) return 150+crashCount;
-  return 170+crashCount;
+  if (eggCount >= 30) return 90;
+  if (eggCount >= 25) return 110;
+  if (eggCount >= 20) return 120;
+  if (eggCount >= 15) return 130;
+  if (eggCount >= 10) return 140;
+  if (eggCount >= 5) return 150;
+  return 170;
 };
 
 const snakeColorForEggCount = (eggCount, isBlinkPhase) => {
