@@ -29,6 +29,19 @@ const createInitialSnake = () => [
   { x: 8, y: 10 },
 ];
 
+const createCheckpointSnake = () => {
+  const topRowSegments = Array.from({ length: 11 }, (_, index) => ({
+    x: 10 - index,
+    y: 10,
+  }));
+  const lowerRowSegments = Array.from({ length: 19 }, (_, index) => ({
+    x: index,
+    y: 11,
+  }));
+
+  return [...topRowSegments, ...lowerRowSegments];
+};
+
 const randomEggStyle = () => ({
   shell: pastelColors[Math.floor(Math.random() * pastelColors.length)],
   accent: accentColors[Math.floor(Math.random() * accentColors.length)],
@@ -330,13 +343,17 @@ const createCheckpointCollectedEggs = () =>
   }));
 
 const createCheckpointGameState = (crashCount, checkpointFlashId = 1) => {
-  const initialSnake = createInitialSnake();
+  const checkpointSnake = createCheckpointSnake();
 
   return {
-    snake: initialSnake,
+    snake: checkpointSnake,
     direction: { x: 1, y: 0 },
     pendingDirection: { x: 1, y: 0 },
-    food: getRandomFood(initialSnake, CHECKPOINT_EGG_COUNT + 1, crashCount >= 3),
+    food: getRandomFood(
+      checkpointSnake,
+      CHECKPOINT_EGG_COUNT + 1,
+      crashCount >= 3,
+    ),
     eggStyle: randomEggStyle(),
     collectedEggs: createCheckpointCollectedEggs(),
     eggsEaten: CHECKPOINT_EGG_COUNT,
@@ -565,6 +582,10 @@ export default function SnakeEasterChallenge({ onWin }) {
             },
           ],
           eggsEaten: newEggCount,
+          checkpointFlashId:
+            newEggCount === CHECKPOINT_EGG_COUNT
+              ? prev.checkpointFlashId + 1
+              : prev.checkpointFlashId,
           hasStarted: didWin ? false : prev.hasStarted,
           isWon: didWin,
         };
