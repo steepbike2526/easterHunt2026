@@ -36,14 +36,16 @@ const randomEggStyle = () => ({
 const isOppositeDirection = (next, current) =>
   next.x + current.x === 0 && next.y + current.y === 0;
 
-const speedForEggCount = (eggCount) => {
-  if (eggCount >= 30) return 90+crashCount;
-  if (eggCount >= 25) return 110+crashCount;
-  if (eggCount >= 20) return 120+crashCount;
-  if (eggCount >= 15) return 130+crashCount;
-  if (eggCount >= 10) return 140+crashCount;
-  if (eggCount >= 5) return 150+crashCount;
-  return 170+crashCount;
+const speedForEggCount = (eggCount, crashCount = 0) => {
+  const crashPenaltyMs = crashCount * 10;
+
+  if (eggCount >= 30) return 90 + crashPenaltyMs;
+  if (eggCount >= 25) return 110 + crashPenaltyMs;
+  if (eggCount >= 20) return 120 + crashPenaltyMs;
+  if (eggCount >= 15) return 130 + crashPenaltyMs;
+  if (eggCount >= 10) return 140 + crashPenaltyMs;
+  if (eggCount >= 5) return 150 + crashPenaltyMs;
+  return 170 + crashPenaltyMs;
 };
 
 const snakeColorForEggCount = (eggCount, isBlinkPhase) => {
@@ -420,7 +422,10 @@ export default function SnakeEasterChallenge({ onWin }) {
     crashCount,
   } = gameState;
 
-  const tickMs = useMemo(() => speedForEggCount(eggsEaten), [eggsEaten]);
+  const tickMs = useMemo(
+    () => speedForEggCount(eggsEaten, crashCount),
+    [eggsEaten, crashCount],
+  );
   const snakeColorClass = useMemo(
     () => snakeColorForEggCount(eggsEaten, isBlinkPhase),
     [eggsEaten, isBlinkPhase],
