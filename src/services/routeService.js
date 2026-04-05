@@ -4,7 +4,8 @@ export const ROUTES = {
   CLUE_ONE: 'clu1',
   FRACTION_ASSESSMENT: 'frame',
   ROCKET_PUZZLE: 'lego',
-  FINAL_CHALLENGE: 'bed'
+  FINAL_CHALLENGE: 'bed',
+  STANLEY: 'stanley'
 }
 
 export const getRoutePath = (id) => `/${id}`
