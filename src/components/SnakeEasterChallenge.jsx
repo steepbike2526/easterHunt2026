@@ -37,7 +37,7 @@ const isOppositeDirection = (next, current) =>
   next.x + current.x === 0 && next.y + current.y === 0;
 
 const speedForEggCount = (eggCount, crashCount = 0) => {
-  const crashPenaltyMs = crashCount * 10;
+  const crashPenaltyMs = crashCount * 1;
 
   if (eggCount >= 30) return 90 + crashPenaltyMs;
   if (eggCount >= 25) return 110 + crashPenaltyMs;
