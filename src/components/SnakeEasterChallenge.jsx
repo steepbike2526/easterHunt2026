@@ -310,7 +310,7 @@ const createInitialGameState = (crashCount = 0) => {
     food: getRandomFood(initialSnake, 1, crashCount >= 3),
     eggStyle: randomEggStyle(),
     collectedEggs: [],
-    eggsEaten: 35,
+    eggsEaten: 0,
     hasStarted: false,
     isWon: false,
     crashCount,
