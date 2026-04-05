@@ -623,7 +623,10 @@ export default function SnakeEasterChallenge({ onWin }) {
   }, [hasStarted, isWon, tickMs]);
 
   useEffect(() => {
-    if (checkpointFlashId === 0) return undefined;
+    if (checkpointFlashId === 0) {
+      setIsCheckpointFlashVisible(false);
+      return undefined;
+    }
 
     setIsCheckpointFlashVisible(true);
     const hideMessageTimeout = window.setTimeout(() => {
