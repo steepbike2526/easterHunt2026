@@ -1,61 +1,61 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import RetroButton from '../components/RetroButton'
-import SequencedReveal from '../components/SequencedReveal'
-import StreamingText from '../components/StreamingText'
-import TerminalWindow from '../components/TerminalWindow'
-import { normalizeAnswer } from '../utils/answerUtils'
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import RetroButton from "../components/RetroButton";
+import SequencedReveal from "../components/SequencedReveal";
+import StreamingText from "../components/StreamingText";
+import TerminalWindow from "../components/TerminalWindow";
+import { normalizeAnswer } from "../utils/answerUtils";
 
 const initialAnswers = {
-  denominatorTen: '',
-  largerFraction: '',
-  simplifiedFraction: ''
-}
+  denominatorTen: "",
+  largerFraction: "",
+  simplifiedFraction: "",
+};
 
 const isEquivalentHalfWithTen = (value) => {
-  const normalized = normalizeAnswer(value)
-  return normalized === '5/10' || normalized === '5'
-}
+  const normalized = normalizeAnswer(value);
+  return normalized === "5/10" || normalized === "5";
+};
 
 const isLargerFractionCorrect = (value) => {
-  const normalized = normalizeAnswer(value)
-  return normalized === '3/4' || normalized === '3÷4'
-}
+  const normalized = normalizeAnswer(value);
+  return normalized === "3/4" || normalized === "3÷4";
+};
 
 const isSimplifiedFractionCorrect = (value) => {
-  const normalized = normalizeAnswer(value)
-  return normalized === '3/4' || normalized === '0.75'
-}
+  const normalized = normalizeAnswer(value);
+  return normalized === "3/4" || normalized === "0.75";
+};
 
 export default function FractionAssessmentPage() {
-  const [answers, setAnswers] = useState(initialAnswers)
-  const [isCorrect, setIsCorrect] = useState(false)
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const [answers, setAnswers] = useState(initialAnswers);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const allCorrect = useMemo(
     () =>
       isEquivalentHalfWithTen(answers.denominatorTen) &&
       isLargerFractionCorrect(answers.largerFraction) &&
       isSimplifiedFractionCorrect(answers.simplifiedFraction),
-    [answers]
-  )
+    [answers],
+  );
 
   const onAnswerChange = (key, value) => {
-    setAnswers((prev) => ({ ...prev, [key]: value }))
-    setError('')
-  }
+    setAnswers((prev) => ({ ...prev, [key]: value }));
+    setError("");
+  };
 
   const onSubmit = () => {
     if (!allCorrect) {
-      setIsCorrect(false)
-      setError('Not quite. Try again.')
-      return
+      setIsCorrect(false);
+      setError("Not quite. Try again.");
+      return;
     }
 
-    setIsCorrect(true)
-    setError('')
-  }
+    setIsCorrect(true);
+    setError("");
+  };
 
   return (
     <TerminalWindow>
@@ -66,12 +66,17 @@ export default function FractionAssessmentPage() {
       </div>
 
       <div className="mt-8 space-y-4 rounded border border-lime-400/50 bg-slate-950/60 p-4 text-lime-200">
-        <StreamingText text="Fraction Assessment Initiated…" className="font-semibold" />
+        <StreamingText
+          text="Fraction Assessment Initiated…"
+          className="font-semibold"
+        />
         <StreamingText text="1.What is an equivalent fraction to 1/2 with a denominator of 10?" />
         <SequencedReveal>
           <input
             value={answers.denominatorTen}
-            onChange={(event) => onAnswerChange('denominatorTen', event.target.value)}
+            onChange={(event) =>
+              onAnswerChange("denominatorTen", event.target.value)
+            }
             className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
             placeholder="Enter your answer"
           />
@@ -81,7 +86,9 @@ export default function FractionAssessmentPage() {
         <SequencedReveal>
           <input
             value={answers.largerFraction}
-            onChange={(event) => onAnswerChange('largerFraction', event.target.value)}
+            onChange={(event) =>
+              onAnswerChange("largerFraction", event.target.value)
+            }
             className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
             placeholder="Enter your answer"
           />
@@ -91,7 +98,9 @@ export default function FractionAssessmentPage() {
         <SequencedReveal>
           <input
             value={answers.simplifiedFraction}
-            onChange={(event) => onAnswerChange('simplifiedFraction', event.target.value)}
+            onChange={(event) =>
+              onAnswerChange("simplifiedFraction", event.target.value)
+            }
             className="w-full rounded border border-lime-500 bg-black p-3 text-lime-200 outline-none focus:border-lime-300"
             placeholder="Enter your answer"
           />
@@ -128,11 +137,13 @@ export default function FractionAssessmentPage() {
 
           <SequencedReveal>
             <div className="flex flex-col gap-3 pt-3 md:flex-row">
-              <RetroButton onClick={() => navigate('/')}>Return to homepage</RetroButton>
+              <RetroButton onClick={() => navigate("/")}>
+                Return to clue entry portal
+              </RetroButton>
             </div>
           </SequencedReveal>
         </div>
       )}
     </TerminalWindow>
-  )
+  );
 }
