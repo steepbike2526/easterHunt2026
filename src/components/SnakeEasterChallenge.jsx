@@ -400,7 +400,7 @@ function Basket({ collectedEggs, isExpandedView = false }) {
 
 export default function SnakeEasterChallenge({ onWin }) {
   const [gameState, setGameState] = useState(createInitialGameState);
-  const [touchStart, setTouchStart] = useState(null);
+  const touchStartRef = useRef(null);
   const [isBlinkPhase, setIsBlinkPhase] = useState(false);
   const [isExpandedView, setIsExpandedView] = useState(false);
   const audioControllerRef = useRef(null);
@@ -590,15 +590,17 @@ export default function SnakeEasterChallenge({ onWin }) {
   const onTouchStart = (event) => {
     ensureAudioReady();
     const touch = event.touches[0];
-    setTouchStart({ x: touch.clientX, y: touch.clientY });
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
   };
 
   const onTouchEnd = (event) => {
+    const touchStart = touchStartRef.current;
     if (!touchStart) return;
+
     const touch = event.changedTouches[0];
     const deltaX = touch.clientX - touchStart.x;
     const deltaY = touch.clientY - touchStart.y;
-    setTouchStart(null);
+    touchStartRef.current = null;
 
     if (
       Math.abs(deltaX) < MIN_SWIPE_DISTANCE &&
