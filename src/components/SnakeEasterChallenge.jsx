@@ -40,7 +40,7 @@ const speedForEggCount = (eggCount) => {
   if (eggCount >= 30) return 90+crashCount;
   if (eggCount >= 25) return 110+crashCount;
   if (eggCount >= 20) return 120+crashCount;
-  if (eggCount >= 15) return 130crashCount;
+  if (eggCount >= 15) return 130+crashCount;
   if (eggCount >= 10) return 140+crashCount;
   if (eggCount >= 5) return 150+crashCount;
   return 170+crashCount;
