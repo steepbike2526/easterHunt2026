@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RetroButton from '../components/RetroButton'
+import SequencedReveal from '../components/SequencedReveal'
 import StreamingText from '../components/StreamingText'
 import TerminalWindow from '../components/TerminalWindow'
 import { ROUTES, getRoutePath } from '../services/routeService'
@@ -38,12 +39,14 @@ export default function IntroPage() {
       </div>
 
       {visibleCount >= lines.length && (
-        <div className="mt-10 flex flex-col gap-4 md:flex-row">
-          <RetroButton onClick={() => navigate(getRoutePath(ROUTES.ASSESSMENT))} className="md:min-w-44">
-            YES
-          </RetroButton>
-          <RetroButton className="md:min-w-44">NO</RetroButton>
-        </div>
+        <SequencedReveal>
+          <div className="mt-10 flex flex-col gap-4 md:flex-row">
+            <RetroButton onClick={() => navigate(getRoutePath(ROUTES.ASSESSMENT))} className="md:min-w-44">
+              YES
+            </RetroButton>
+            <RetroButton className="md:min-w-44">NO</RetroButton>
+          </div>
+        </SequencedReveal>
       )}
     </TerminalWindow>
   )
