@@ -638,6 +638,8 @@ export default function SnakeEasterChallenge({ onWin }) {
 
   useEffect(() => {
     if (checkpointFlashId === 0) {
+      // Reset paths can cancel the previous timeout during cleanup, so
+      // explicitly hide the banner when no checkpoint flash is active.
       setIsCheckpointFlashVisible(false);
       return undefined;
     }
