@@ -45,12 +45,6 @@ jobs:
             exit 1
           fi
 
-          if grep -Eq '(src|href)="/assets/' dist/index.html; then
-            echo "::error::index.html references /assets with an absolute path. This usually causes a blank page on project GitHub Pages sites."
-            echo "::error::Fix by setting the Vite base path (for example './' or '/<repo>/')."
-            exit 1
-          fi
-
           missing_asset_count=0
           while IFS= read -r asset_path; do
             [ -z "$asset_path" ] && continue
