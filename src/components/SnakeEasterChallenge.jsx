@@ -139,6 +139,8 @@ const createAudioController = () => {
   const context = new AudioContextClass();
   let isDisposed = false;
   let backgroundLoopHandle = null;
+  let backgroundLoopRequestId = 0;
+  let shouldRunBackgroundLoop = false;
   let backgroundBeatMs = backgroundBeatForTick(speedForEggCount(0));
   let backgroundStep = 0;
   const melody = [523.25, 659.25, 783.99, 659.25, 880, 783.99, 659.25, 523.25];
@@ -257,12 +259,24 @@ const createAudioController = () => {
   return {
     resume: async () => ensureContextRunning(),
     startBackgroundLoop: () => {
+      shouldRunBackgroundLoop = true;
+      const requestId = backgroundLoopRequestId + 1;
+      backgroundLoopRequestId = requestId;
       void ensureContextRunning().then((canPlay) => {
         if (!canPlay) return;
+        if (
+          isDisposed ||
+          !shouldRunBackgroundLoop ||
+          requestId !== backgroundLoopRequestId
+        ) {
+          return;
+        }
         startBackgroundLoop();
       });
     },
     stopBackgroundLoop: () => {
+      shouldRunBackgroundLoop = false;
+      backgroundLoopRequestId += 1;
       stopBackgroundLoop();
     },
     setBackgroundBeatMs: (nextBeatMs) => {
@@ -312,6 +326,8 @@ const createAudioController = () => {
     },
     dispose: () => {
       isDisposed = true;
+      shouldRunBackgroundLoop = false;
+      backgroundLoopRequestId += 1;
       stopBackgroundLoop();
       void context.close();
     },
@@ -753,29 +769,12 @@ export default function SnakeEasterChallenge({ onWin }) {
     };
   }, [isExpandedView]);
 
-  useEffect(() => {
-    const containerElement = expandedContainerRef.current;
-    if (!isExpandedView || !containerElement) return undefined;
-
-    const preventTouchDefault = (event) => {
-      event.preventDefault();
-    };
-
-    containerElement.addEventListener("touchmove", preventTouchDefault, {
-      passive: false,
-    });
-
-    return () => {
-      containerElement.removeEventListener("touchmove", preventTouchDefault);
-    };
-  }, [isExpandedView]);
-
   return (
     <div
       ref={expandedContainerRef}
       className={`space-y-4 rounded border border-lime-400/40 bg-slate-950/70 p-4 select-none ${
         isExpandedView
-          ? "fixed inset-0 z-50 overflow-hidden bg-slate-950 px-4 py-6 md:px-6"
+          ? "fixed inset-0 z-50 overflow-y-auto bg-slate-950 px-4 py-6 md:px-6"
           : "mt-6"
       }`}
     >

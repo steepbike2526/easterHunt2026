@@ -16,7 +16,7 @@ export default function SequencedReveal({ children }) {
   const canReveal = !isSequenced || hasCompleted || activeId === revealId
 
   useEffect(() => {
-    if (!isSequenced || !register || !unregister) {
+    if (!register || !unregister) {
       return undefined
     }
 
@@ -25,7 +25,7 @@ export default function SequencedReveal({ children }) {
     return () => {
       unregister(revealId)
     }
-  }, [isSequenced, register, revealId, unregister])
+  }, [register, revealId, unregister])
 
   useEffect(() => {
     if (isSequenced && canReveal && !hasCompleted) {

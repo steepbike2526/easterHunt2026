@@ -26,7 +26,7 @@ export default function StreamingText({
   const canAnimate = !isSequenced || hasCompleted || activeId === streamId
 
   useEffect(() => {
-    if (!isSequenced || !register || !unregister) {
+    if (!register || !unregister) {
       return undefined
     }
 
@@ -35,7 +35,7 @@ export default function StreamingText({
     return () => {
       unregister(streamId)
     }
-  }, [isSequenced, register, streamId, unregister])
+  }, [register, streamId, unregister])
 
   useEffect(() => {
     setVisibleCount(0)
